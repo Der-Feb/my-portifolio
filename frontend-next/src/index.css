@@ -596,3 +596,8 @@ body {
   z-index: 8;
   background: radial-gradient(ellipse at center, transparent 40%, rgba(8,9,13,0.7) 100%);
 }
+
+/* Final Polish: Refined Charcoal Palette & Shadow */
+:root {
+  --rim-glow: 0 0 12px rgba(232,125,43,0.35), 0 0 25px rgba(232,125,43,0.1);
+}
