@@ -1,111 +1,434 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+/* ─── INSIDE Palette ─────────────────────────────────────────── */
+:root {
+  --bg-void:        #08090d;
+  --bg-deep:        #0d0f17;
+  --bg-mid:         #12151f;
+  --bg-surface:     #1a1e2a;
+  --bg-elevated:    #21253a;
 
-/* Portfolio Design System - Dark Theme with Coral Accent */
+  --layer-sky:      #0a0d18;
+  --layer-far:      #0f1220;
+  --layer-mid:      #141828;
+  --layer-near:     #1c2035;
+  --layer-fg:       #0d0f17;
 
-@layer base {
-  :root {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+  --naruto-orange:  #e87d2b;
+  --naruto-accent:  #f0a050;
+  --naruto-glow:    rgba(232, 125, 43, 0.35);
 
-    --card: 240 10% 6%;
-    --card-foreground: 0 0% 98%;
+  --text-primary:   #e8e4d8;
+  --text-secondary: #8a8fa8;
+  --text-dim:       #4a4f62;
 
-    --popover: 240 10% 6%;
-    --popover-foreground: 0 0% 98%;
+  --rim-glow:       0 0 12px rgba(232, 125, 43, 0.6), 0 0 30px rgba(232, 125, 43, 0.2);
+  --fog-gradient:   linear-gradient(to right, rgba(8,9,13,0.9), transparent 20%, transparent 80%, rgba(8,9,13,0.9));
 
-    --primary: 12 76% 61%;
-    --primary-foreground: 240 10% 4%;
+  --font-display:   'Bebas Neue', sans-serif;
+  --font-body:      'Inter', sans-serif;
 
-    --secondary: 240 6% 12%;
-    --secondary-foreground: 0 0% 98%;
+  /* scroll speed multipliers per layer */
+  --speed-sky:   0.15;
+  --speed-far:   0.3;
+  --speed-mid:   0.55;
+  --speed-near:  0.8;
+}
 
-    --muted: 240 6% 15%;
-    --muted-foreground: 240 5% 65%;
+/* ─── Reset & Base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    --accent: 12 76% 61%;
-    --accent-foreground: 240 10% 4%;
+html { scroll-behavior: smooth; }
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
 
-    --border: 240 6% 18%;
-    --input: 240 6% 18%;
-    --ring: 12 76% 61%;
+/* hide scrollbar but keep functionality */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--naruto-orange); }
 
-    --radius: 0.75rem;
+/* ─── Typography ──────────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); letter-spacing: 0.02em; }
+.font-body    { font-family: var(--font-body); }
 
-    /* Custom Portfolio Tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(12 76% 61%), hsl(25 85% 55%));
-    --gradient-glow: radial-gradient(circle at 50% 50%, hsl(12 76% 61% / 0.15), transparent 70%);
-    --shadow-glow: 0 0 60px -15px hsl(12 76% 61% / 0.4);
-    --shadow-card: 0 10px 40px -10px hsl(0 0% 0% / 0.5);
+/* ─── Rim-Light Glow Utilities ───────────────────────────────── */
+.rim-glow {
+  box-shadow: var(--rim-glow);
+  transition: box-shadow 0.3s ease;
+}
+.rim-glow:hover {
+  box-shadow: 0 0 20px rgba(232, 125, 43, 0.8), 0 0 50px rgba(232, 125, 43, 0.3);
+}
+.rim-glow-subtle {
+  box-shadow: 0 0 8px rgba(232, 125, 43, 0.25), 0 0 20px rgba(232, 125, 43, 0.08);
+}
 
-    /* Typography */
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-body: 'Inter', sans-serif;
+/* ─── Parallax World Container ───────────────────────────────── */
+.world-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Desktop: horizontal scrolling world */
+@media (min-width: 768px) {
+  .world-scroll-x {
+    display: flex;
+    align-items: flex-end;
+    width: max-content;
+    height: 100vh;
+    will-change: transform;
   }
-
-  .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+  .section-room {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    flex-shrink: 0;
+    overflow: hidden;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+/* Mobile: standard vertical */
+@media (max-width: 767px) {
+  .world-scroll-x {
+    display: block;
+    width: 100%;
   }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body);
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
+  .section-room {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
   }
 }
 
-@layer components {
-  .text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .glow-effect {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .card-elevated {
-    background: hsl(var(--card));
-    box-shadow: var(--shadow-card);
-    border: 1px solid hsl(var(--border));
-  }
-
-  .nav-link {
-    @apply relative text-muted-foreground transition-colors duration-300 hover:text-foreground;
-  }
-
-  .nav-link::after {
-    content: '';
-    @apply absolute -bottom-1 left-0 h-0.5 w-0 bg-primary transition-all duration-300;
-  }
-
-  .nav-link:hover::after {
-    @apply w-full;
-  }
-
-  .section-padding {
-    @apply py-24 md:py-32;
-  }
+/* ─── Parallax Layers ─────────────────────────────────────────── */
+.parallax-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
+.layer-sky   { z-index: 1; }
+.layer-far   { z-index: 2; }
+.layer-mid   { z-index: 3; }
+.layer-near  { z-index: 4; }
+.layer-fg    { z-index: 5; }
+.layer-char  { z-index: 6; }
+.layer-ui    { z-index: 10; }
+
+/* ─── Atmospheric Fog ────────────────────────────────────────── */
+.fog-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: var(--fog-gradient);
+}
+.fog-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(8,9,13,0.7) 100%);
+}
+
+/* ─── Volumetric Light Shaft ──────────────────────────────────── */
+.light-shaft {
+  position: absolute;
+  width: 120px;
+  background: linear-gradient(to bottom, rgba(255,220,150,0.06) 0%, transparent 100%);
+  transform-origin: top center;
+  pointer-events: none;
+  animation: shaftFlicker 4s ease-in-out infinite alternate;
+}
+@keyframes shaftFlicker {
+  0%   { opacity: 0.5; transform: skewX(-3deg); }
+  50%  { opacity: 0.8; transform: skewX(-2deg); }
+  100% { opacity: 0.4; transform: skewX(-4deg); }
+}
+
+/* ─── Page Flip Transition ────────────────────────────────────── */
+.page-flip-enter {
+  transform-origin: left center;
+  transform: perspective(1400px) rotateY(-90deg);
+  opacity: 0;
+}
+.page-flip-active {
+  transform: perspective(1400px) rotateY(0deg);
+  opacity: 1;
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease;
+}
+
+/* ─── HUD Navbar ──────────────────────────────────────────────── */
+.hud-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(8,9,13,0.95) 0%, rgba(8,9,13,0.0) 100%);
+  backdrop-filter: blur(4px);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(232,125,43,0.1);
+}
+.hud-logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--naruto-orange);
+  letter-spacing: 0.05em;
+  text-shadow: var(--rim-glow);
+}
+.hud-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+.hud-link {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+.hud-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--naruto-orange);
+  transition: width 0.3s ease;
+}
+.hud-link:hover { color: var(--naruto-orange); }
+.hud-link:hover::after { width: 100%; }
+.hud-link.active { color: var(--naruto-orange); }
+.hud-link.active::after { width: 100%; }
+
+/* ─── Section Titles ──────────────────────────────────────────── */
+.section-eyebrow {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--naruto-orange);
+  margin-bottom: 8px;
+  display: block;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 8rem);
+  line-height: 0.9;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+/* ─── Book Shelf & Cards ──────────────────────────────────────── */
+.book-spine {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 2px 6px 6px 2px;
+}
+.book-spine:hover {
+  transform: translateY(-8px) translateX(4px);
+  box-shadow: var(--rim-glow);
+}
+
+/* ─── NPC Dialogue Bubble ─────────────────────────────────────── */
+.dialogue-bubble {
+  position: absolute;
+  background: rgba(26, 30, 42, 0.95);
+  border: 1px solid rgba(232,125,43,0.3);
+  border-radius: 8px 8px 8px 0;
+  padding: 12px 16px;
+  max-width: 280px;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,125,43,0.15);
+}
+.dialogue-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.dialogue-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  border: 5px solid transparent;
+  border-top-color: rgba(232,125,43,0.3);
+  border-right: none;
+}
+
+/* ─── Holographic Form ────────────────────────────────────────── */
+.hologram-form {
+  background: linear-gradient(135deg, rgba(26,30,42,0.97) 0%, rgba(14,18,32,0.97) 100%);
+  border: 1px solid rgba(232,125,43,0.4);
+  box-shadow:
+    0 0 40px rgba(232,125,43,0.15),
+    0 0 80px rgba(100,120,255,0.05),
+    inset 0 1px 0 rgba(232,125,43,0.2);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.hologram-form::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(232,125,43,0.015) 3px,
+    rgba(232,125,43,0.015) 4px
+  );
+  pointer-events: none;
+}
+.hologram-input {
+  background: rgba(8,9,13,0.6);
+  border: 1px solid rgba(232,125,43,0.2);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.hologram-input:focus {
+  border-color: var(--naruto-orange);
+  box-shadow: 0 0 12px rgba(232,125,43,0.2);
+}
+.hologram-input::placeholder { color: var(--text-dim); }
+.hologram-btn {
+  background: var(--naruto-orange);
+  color: #0a0c11;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  padding: 12px 32px;
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  width: 100%;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.hologram-btn:hover {
+  background: var(--naruto-accent);
+  box-shadow: var(--rim-glow);
+}
+
+/* ─── Modal Overlay ───────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8,9,13,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-content {
+  background: var(--bg-surface);
+  border: 1px solid rgba(232,125,43,0.25);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8), var(--rim-glow);
+  border-radius: 4px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.94) rotateX(3deg); }
+  to   { opacity: 1; transform: scale(1) rotateX(0); }
+}
+
+/* ─── Body Flicker Jutsu ──────────────────────────────────────── */
+@keyframes bodyFlicker {
+  0%   { opacity: 1; }
+  15%  { opacity: 0.05; }
+  30%  { opacity: 1; }
+  45%  { opacity: 0.1; }
+  60%  { opacity: 1; }
+  75%  { opacity: 0.15; }
+  100% { opacity: 1; }
+}
+.body-flicker { animation: bodyFlicker 0.35s ease-out; }
+
+/* ─── Naruto Character ────────────────────────────────────────── */
+.naruto-char {
+  position: absolute;
+  bottom: 80px;
+  transition: left 0.1s linear;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 8px rgba(232,125,43,0.5));
+}
+.naruto-char.running .naruto-body { animation: narutoRun 0.35s steps(1) infinite; }
+.naruto-char.jumping { animation: narutoJump 0.5s ease-out; }
+
+@keyframes narutoRun {
+  0%   { transform: scaleX(1)   translateY(0); }
+  25%  { transform: scaleX(1)   translateY(-3px); }
+  50%  { transform: scaleX(1)   translateY(0); }
+  75%  { transform: scaleX(1)   translateY(-2px); }
+}
+@keyframes narutoJump {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-60px); }
+  100% { transform: translateY(0); }
+}
+@keyframes narutoIdle {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%       { transform: translateY(-3px) scaleY(1.01); }
+}
+.naruto-char.idle .naruto-body { animation: narutoIdle 2s ease-in-out infinite; }
+
+/* ─── Ground Lines ────────────────────────────────────────────── */
+.ground-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to top, var(--layer-near) 0%, transparent 100%);
+}
+
+/* ─── Silhouette NPC ──────────────────────────────────────────── */
+.npc-silhouette {
+  position: absolute;
+  bottom: 80px;
+  opacity: 0.6;
+  filter: brightness(0) invert(0);
+  transition: opacity 0.3s;
+}
+.npc-silhouette:hover { opacity: 0.85; }
+
+/* ─── Phone Booth ─────────────────────────────────────────────── */
+.phone-booth-glow {
+  filter: drop-shadow(0 0 20px rgba(220, 40, 40, 0.5)) drop-shadow(0 0 40px rgba(220, 40, 40, 0.2));
+}
+
+/* ─── Util ────────────────────────────────────────────────────── */
+.text-orange { color: var(--naruto-orange); }
+.text-dim    { color: var(--text-secondary); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.no-select { user-select: none; }
