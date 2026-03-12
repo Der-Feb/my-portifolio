@@ -88,13 +88,13 @@ const PhoneBoothSection = () => {
       <div className="fog-vignette" style={{ zIndex: 8 }} />
 
       {/* ── MAIN CONTENT ── */}
-      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 900, width: '100%' }}>
-        <span className="section-eyebrow">THE PHONE BOOTH</span>
-        <h2 className="section-title" style={{ marginBottom: '1rem', fontSize: 'clamp(2rem, 6vw, 7rem)' }}>
+      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: 800, width: '100%' }}>
+        <span className="section-eyebrow" style={{ fontSize: '0.55rem', letterSpacing: '0.3em' }}>THE PHONE BOOTH</span>
+        <h2 className="section-title" style={{ marginBottom: '0.8rem', fontSize: 'clamp(2rem, 5vw, 4.5rem)' }}>
           MAKE<br />
           <span style={{ color: 'var(--naruto-orange)' }}>CONTACT</span>
         </h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontSize: '0.9rem', maxWidth: 400, margin: '0 auto 3rem' }}>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.75rem', maxWidth: 320, margin: '0 auto 2rem' }}>
           Step inside the booth and pick up the receiver to transmit a message.
         </p>
 
@@ -105,13 +105,13 @@ const PhoneBoothSection = () => {
           style={{
             display: 'inline-block',
             cursor: boothEntered ? 'default' : 'pointer',
-            margin: '0 auto 2rem',
+            margin: '0 auto 1.5rem',
             transition: 'transform 0.3s',
-            transform: boothEntered ? 'scale(1.05)' : 'scale(1)',
+            transform: boothEntered ? 'scale(1)' : 'scale(0.85)',
           }}
           title={boothEntered ? '' : 'Click to enter the booth'}
         >
-          <svg width="120" height="220" viewBox="0 0 120 220" fill="none" xmlns="http://www.w3.org/2000/svg"
+          <svg width="100" height="180" viewBox="0 0 120 220" fill="none" xmlns="http://www.w3.org/2000/svg"
             className={boothEntered ? 'phone-booth-glow' : ''}
           >
             {/* Booth body */}
@@ -151,18 +151,17 @@ const PhoneBoothSection = () => {
           </svg>
         </div>
 
-        {/* Contact info below booth */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
           {[
             { label: 'EMAIL', value: 'bugingoderer@gmail.com', href: 'mailto:bugingoderer@gmail.com' },
             { label: 'PHONE', value: '+250 781 296 448', href: 'tel:+250781296448' },
             { label: 'LOCATION', value: 'Nyabihu, Rwanda', href: '#' },
           ].map(({ label, value, href }) => (
             <div key={label} style={{ textAlign: 'center' }}>
-              <span style={{ display: 'block', fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--naruto-orange)', marginBottom: 6, fontFamily: 'var(--font-body)', textTransform: 'uppercase' }}>
+              <span style={{ display: 'block', fontSize: '0.45rem', letterSpacing: '0.2em', color: 'var(--naruto-orange)', marginBottom: 4, fontFamily: 'var(--font-body)', textTransform: 'uppercase' }}>
                 {label}
               </span>
-              <a href={href} style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.85rem', transition: 'color 0.2s' }}
+              <a href={href} style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.7rem', transition: 'color 0.2s' }}
                 onMouseOver={e => (e.currentTarget.style.color = 'var(--naruto-orange)')}
                 onMouseOut={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
               >
@@ -173,7 +172,7 @@ const PhoneBoothSection = () => {
         </div>
 
         {/* Social links */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: '1.5rem' }}>
           {SOCIALS.map(({ name, link }) => (
             <a
               key={name}
@@ -182,11 +181,11 @@ const PhoneBoothSection = () => {
               rel="noopener noreferrer"
               className="rim-glow-subtle"
               style={{
-                padding: '8px 20px',
+                padding: '6px 16px',
                 border: '1px solid rgba(232,125,43,0.25)',
                 color: 'var(--text-secondary)',
                 textDecoration: 'none',
-                fontSize: '0.72rem',
+                fontSize: '0.6rem',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 transition: 'border-color 0.2s, color 0.2s',
@@ -216,40 +215,36 @@ const PhoneBoothSection = () => {
           <div className="hologram-form" style={{ width: '100%', maxWidth: 520, padding: '0' }}>
             {/* Header */}
             <div style={{
-              padding: '28px 32px 20px',
+              padding: '20px 24px 16px',
               borderBottom: '1px solid rgba(232,125,43,0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
               <div>
-                <span style={{ fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--naruto-orange)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+                <span style={{ fontSize: '0.5rem', letterSpacing: '0.2em', color: 'var(--naruto-orange)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
                   ◈ SECURE TRANSMISSION
                 </span>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: 'var(--text-primary)', letterSpacing: '0.05em' }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--text-primary)', letterSpacing: '0.05em' }}>
                   SEND MESSAGE
                 </h3>
               </div>
-              <button
-                onClick={() => { setFormOpen(false); setBoothEntered(false); }}
-                style={{ background: 'none', border: '1px solid rgba(232,125,43,0.3)', color: 'var(--naruto-orange)', width: 32, height: 32, cursor: 'pointer', borderRadius: 2, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >×</button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} style={{ padding: '24px 32px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleSubmit} style={{ padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {sent ? (
-                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: 12 }}>⚡</div>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--naruto-orange)', letterSpacing: '0.1em' }}>
+                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 8 }}>⚡</div>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--naruto-orange)', letterSpacing: '0.1em' }}>
                     MESSAGE TRANSMITTED
                   </span>
-                  <p style={{ color: 'var(--text-secondary)', marginTop: 8, fontSize: '0.85rem' }}>Dattebayo! I'll respond soon.</p>
+                  <p style={{ color: 'var(--text-secondary)', marginTop: 8, fontSize: '0.75rem' }}>Dattebayo! I'll respond soon.</p>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    <label style={{ display: 'block', fontSize: '0.55rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 6, textTransform: 'uppercase' }}>
                       IDENTIFIER (Name)
                     </label>
                     <input
@@ -257,12 +252,13 @@ const PhoneBoothSection = () => {
                       type="text"
                       placeholder="Your name"
                       value={form.name}
+                      style={{ padding: '8px 12px', fontSize: '0.75rem' }}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       required
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    <label style={{ display: 'block', fontSize: '0.55rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 6, textTransform: 'uppercase' }}>
                       CHANNEL (Email)
                     </label>
                     <input
@@ -270,25 +266,26 @@ const PhoneBoothSection = () => {
                       type="email"
                       placeholder="your@email.com"
                       value={form.email}
+                      style={{ padding: '8px 12px', fontSize: '0.75rem' }}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       required
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    <label style={{ display: 'block', fontSize: '0.55rem', letterSpacing: '0.15em', color: 'var(--naruto-orange)', marginBottom: 6, textTransform: 'uppercase' }}>
                       MESSAGE
                     </label>
                     <textarea
                       className="hologram-input"
-                      rows={4}
+                      rows={3}
                       placeholder="Tell me about your project..."
                       value={form.message}
+                      style={{ padding: '8px 12px', fontSize: '0.75rem', resize: 'none' }}
                       onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                       required
-                      style={{ resize: 'none' }}
                     />
                   </div>
-                  <button type="submit" className="hologram-btn" style={{ marginTop: 8 }}>
+                  <button type="submit" className="hologram-btn" style={{ marginTop: 6, fontSize: '0.75rem', padding: '10px' }}>
                     TRANSMIT MESSAGE ⚡
                   </button>
                 </>
