@@ -93,7 +93,7 @@ html, body {
     rgba(6,6,10,0.92) 70%,
     rgba(6,6,10,0.0) 100%
   );
-  padding: 18px 32px 24px;
+  padding: 6px 16px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -101,14 +101,14 @@ html, body {
 .toc-title { display: flex; flex-direction: column; gap: 2px; }
 .toc-title__sigil {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 0.75rem;
   color: var(--naruto-orange);
   letter-spacing: 0.15em;
   line-height: 1;
-  text-shadow: 0 0 20px rgba(232,125,43,0.4);
+  text-shadow: 0 0 10px rgba(232,125,43,0.3);
 }
 .toc-title__sub {
-  font-size: 0.55rem;
+  font-size: 0.45rem;
   letter-spacing: 0.3em;
   color: rgba(232,125,43,0.6);
   text-transform: uppercase;
@@ -118,20 +118,20 @@ html, body {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 6px 20px;
-  border-left: 1px solid rgba(232,125,43,0.15);
+  padding: 4px 14px;
+  border-left: 1px solid rgba(232,125,43,0.1);
   transition: background 0.2s;
 }
 .toc-item:first-child { border-left: none; }
 .toc-item__num {
-  font-size: 0.55rem;
+  font-size: 0.45rem;
   color: rgba(232,125,43,0.5);
   font-family: var(--font-body);
   letter-spacing: 0.15em;
-  margin-right: 8px;
+  margin-right: 6px;
 }
 .toc-item__label {
-  font-size: 0.72rem;
+  font-size: 0.45rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--text-secondary);
@@ -157,20 +157,20 @@ html, body {
 .book-margin-frame::after {
   content: ''; position: absolute; inset: 16px; border: 1px solid rgba(232,125,43,0.08); border-radius: 1px;
 }
-.book-corner { position: fixed; width: 40px; height: 40px; z-index: 9001; pointer-events: none; opacity: 0.6; }
-.book-corner--tl { top: 12px; left: 12px; }
-.book-corner--tr { top: 12px; right: 12px; transform: scaleX(-1); }
-.book-corner--bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
-.book-corner--br { bottom: 12px; right: 12px; transform: scale(-1); }
+.book-corner { position: fixed; width: 24px; height: 24px; z-index: 9001; pointer-events: none; opacity: 0.4; }
+.book-corner--tl { top: 8px; left: 8px; }
+.book-corner--tr { top: 8px; right: 8px; transform: scaleX(-1); }
+.book-corner--bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+.book-corner--br { bottom: 8px; right: 8px; transform: scale(-1); }
 
 /* ─── Page Numbers ────────────────────────────────────────── */
 .page-number {
-  position: fixed; bottom: 20px; z-index: 9001; pointer-events: none;
-  font-family: var(--font-body); font-size: 0.62rem; letter-spacing: 0.25em;
+  position: fixed; bottom: 12px; z-index: 9001; pointer-events: none;
+  font-family: var(--font-body); font-size: 0.45rem; letter-spacing: 0.25em;
   color: rgba(232,125,43,0.5); text-transform: uppercase;
 }
-.page-number--left { left: 32px; }
-.page-number--right { right: 32px; }
+.page-number--left { left: 24px; }
+.page-number--right { right: 24px; }
 
 /* ─── 3D Page Flip ────────────────────────────────────────── */
 .page-flip-overlay {
