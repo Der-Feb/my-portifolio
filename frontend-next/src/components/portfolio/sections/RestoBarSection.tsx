@@ -125,9 +125,9 @@ const RestoBarSection = () => {
 
       <div className="fog-vignette" style={{ zIndex: 8 }} />
 
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: 1000, width: '100%', margin: '0 auto' }}>
-        <span className="section-eyebrow">THE RESTO-BAR</span>
-        <h2 className="section-title" style={{ marginBottom: '3rem', fontSize: 'clamp(2rem, 6vw, 7rem)' }}>
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: 800, width: '100%', margin: '0 auto' }}>
+        <span className="section-eyebrow" style={{ fontSize: '0.45rem', letterSpacing: '0.3rem' }}>THE RESTO-BAR</span>
+        <h2 className="section-title" style={{ marginBottom: '1.5rem', fontSize: 'clamp(1.5rem, 5vw, 4rem)' }}>
           WHAT THEY<br />
           <span style={{ color: 'var(--naruto-orange)' }}>SAY</span>
         </h2>
@@ -139,15 +139,15 @@ const RestoBarSection = () => {
                 alignItems: 'flex-start', flex: '1 1 260px', minWidth: 220 }}>
               <div className={`dialogue-bubble${visibleNPCs.has(i) ? ' visible' : ''}`}
                 style={{ position: 'relative', marginBottom: 24, transitionDelay: `${i * 0.15}s` }}>
-                <span style={{ fontFamily: 'Georgia, serif', fontSize: '3rem', color: 'var(--naruto-orange)',
-                  lineHeight: 0.5, display: 'block', marginBottom: 8, opacity: 0.6 }}>"</span>
-                <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', lineHeight: 1.7, fontStyle: 'italic' }}>
+                <span style={{ fontFamily: 'Georgia, serif', fontSize: '2rem', color: 'var(--naruto-orange)',
+                  lineHeight: 0.5, display: 'block', marginBottom: 6, opacity: 0.6 }}>"</span>
+                <p style={{ color: 'var(--text-primary)', fontSize: '0.7rem', lineHeight: 1.6, fontStyle: 'italic' }}>
                   {t.quote}
                 </p>
-                <div style={{ marginTop: 12, borderTop: '1px solid rgba(232,125,43,0.15)', paddingTop: 10 }}>
+                <div style={{ marginTop: 10, borderTop: '1px solid rgba(232,125,43,0.15)', paddingTop: 8 }}>
                   <span style={{ display: 'block', color: 'var(--naruto-orange)', fontFamily: 'var(--font-display)',
-                    fontSize: '0.9rem', letterSpacing: '0.06em' }}>{t.name}</span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    fontSize: '0.75rem', letterSpacing: '0.06em' }}>{t.name}</span>
+                  <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     {t.role}
                   </span>
                 </div>
