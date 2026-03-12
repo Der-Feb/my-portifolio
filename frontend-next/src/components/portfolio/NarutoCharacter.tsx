@@ -13,87 +13,158 @@ const NarutoCharacter = ({ state = 'idle', flipped = false, style }: Props) => {
     <div
       className={`naruto-character-container ${state} ${flipped ? 'flipped' : ''}`}
       style={{
-        width: 80,
-        height: 120,
+        width: 48,
+        height: 68,
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        filter: 'drop-shadow(0 0 15px rgba(232,125,43,0.4))',
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))',
         ...style,
       }}
     >
       <svg
-        width="100"
-        height="120"
-        viewBox="0 0 100 120"
+        width="48"
+        height="68"
+        viewBox="0 0 48 68"
         className="naruto-svg"
+        style={{ overflow: 'visible' }}
       >
-        {/* Shadow */}
-        <ellipse cx="50" cy="115" rx="20" ry="4" fill="rgba(0,0,0,0.6)" />
+        <defs>
+          <linearGradient id="hairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="100%" stopColor="#eab308" />
+          </linearGradient>
+          <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fef3c7" />
+            <stop offset="100%" stopColor="#fde68a" />
+          </linearGradient>
+          <linearGradient id="jacketGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ea580c" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Dynamic Shadow */}
+        <ellipse className="char-shadow" cx="24" cy="65" rx="14" ry="3.5" fill="rgba(0,0,0,0.45)" />
 
         {/* --- LEGS --- */}
-        <g className="leg-right">
-          <path d="M52,75 L55,100 L62,112" stroke="#1c1a25" strokeWidth="8" strokeLinecap="round" fill="none" />
-          <path d="M52,75 L55,100 L62,112" stroke="#e87d2b" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M60,112 L68,115" stroke="#252b42" strokeWidth="6" strokeLinecap="round" />
-        </g>
-        <g className="leg-left">
-          <path d="M48,75 L45,100 L38,112" stroke="#1c1a25" strokeWidth="8" strokeLinecap="round" fill="none" />
-          <path d="M48,75 L45,100 L38,112" stroke="#e87d2b" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <path d="M40,112 L32,115" stroke="#252b42" strokeWidth="6" strokeLinecap="round" />
-        </g>
-
-        {/* --- ARMS --- */}
-        <g className="arm-right">
-          <path d="M58,45 L70,65" stroke="#1c1a25" strokeWidth="8" strokeLinecap="round" fill="none" />
-          <path d="M58,45 L70,65" stroke="#e87d2b" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <circle cx="70" cy="65" r="3.5" fill="#f5c298" />
+        <g className="shinobi-legs">
+          <g className="leg-back" opacity="0.65">
+            <path d="M22,44 L28,54 L24,64 L16,64 L20,54 Z" fill="#ea580c" stroke="#1c1917" strokeWidth="1" />
+            <path d="M16,64 L24,64 L26,66 L16,66 Z" fill="#1c1917" />
+          </g>
+          <g className="leg-front">
+            <path d="M22,44 L16,54 L20,64 L28,64 L24,54 Z" fill="#f97316" stroke="#1c1917" strokeWidth="1.2" />
+            <path d="M20,64 L28,64 L30,66 L20,66 Z" fill="#1c1917" />
+          </g>
         </g>
 
-        {/* --- BODY --- */}
-        <g className="torso">
-          <rect x="35" y="42" width="30" height="38" rx="5" fill="#e87d2b" />
-          <path d="M35,72 L65,72 L65,80 L35,80 Z" fill="#1c1a25" /> 
-          <path d="M35,42 Q50,38 65,42 L65,50 Q50,46 35,50 Z" fill="#f5f5f5" /> 
-          <line x1="50" y1="50" x2="50" y2="72" stroke="#1c1a25" strokeWidth="2" />
-        </g>
-
-        {/* --- ARMS --- */}
-        <g className="arm-left">
-          <path d="M42,45 L30,65" stroke="#1c1a25" strokeWidth="8" strokeLinecap="round" fill="none" />
-          <path d="M42,45 L30,65" stroke="#e87d2b" strokeWidth="6" strokeLinecap="round" fill="none" />
-          <circle cx="30" cy="65" r="3.5" fill="#f5c298" />
+        {/* --- TORSO --- */}
+        <g className="shinobi-torso">
+          {/* Arm Back */}
+          <path className="arm-back" d="M24,32 L40,42 L38,46 L22,36 Z" fill="#ea580c" stroke="#1c1917" strokeWidth="1" opacity="0.7" />
+          
+          {/* Main Jacket */}
+          <path d="M12,28 L34,28 Q36,28 36,32 L32,46 Q32,48 28,48 L14,48 Q10,48 10,46 Z" fill="url(#jacketGrad)" stroke="#1c1917" strokeWidth="1.2" />
+          <path d="M11,42 L33,42 L32,47 L12,47 Z" fill="#262626" /> {/* Black trim */}
+          <line x1="23" y1="28" x2="23" y2="42" stroke="#1c1917" strokeWidth="0.8" /> {/* Zipper */}
+          
+          {/* Arm Front */}
+          <path className="arm-front" d="M24,32 L42,42 L40,46 L22,36 Z" fill="#f97316" stroke="#1c1917" strokeWidth="1.2" />
+          
+          {/* Collar */}
+          <path d="M16,28 L16,20 Q23,18 30,20 L30,28 Z" fill="#262626" stroke="#1c1917" strokeWidth="1" />
         </g>
 
         {/* --- HEAD --- */}
-        <g className="head-group">
-          <rect x="46" y="38" width="8" height="6" fill="#f5c298" />
-          <path d="M38,20 Q38,40 50,40 Q62,40 62,20 Q62,10 50,10 Q38,10 38,20 Z" fill="#f5c298" />
-          <g className="eyes">
-            <ellipse cx="44" cy="24" rx="2" ry="2.5" fill="#1c1a25" />
-            <ellipse cx="56" cy="24" rx="2" ry="2.5" fill="#1c1a25" />
+        <g className="shinobi-head">
+          {/* Spiky Hair (Back) */}
+          <path d="M18,12 L6,4 L14,10 L8,-4 L20,6Z" fill="url(#hairGrad)" stroke="#854d0e" strokeWidth="0.6" />
+          
+          {/* Face (Side Profile) */}
+          <path d="M18,8 Q38,8 38,22 Q38,32 28,32 Q18,32 18,22 Z" fill="url(#skinGrad)" stroke="#92400e" strokeWidth="1.2" />
+          
+          {/* Headband */}
+          <path d="M18,11 L38,11 L38,18 L18,18 Z" fill="#1e3a8a" stroke="#1c1917" strokeWidth="1" />
+          <g>
+            <rect x="28" y="12" width="9" height="5" fill="#cbd5e1" rx="0.5" stroke="#1c1917" strokeWidth="0.6" />
+            <path d="M30,14 Q32.5,12 35,14 Q34,14.5 35,15 Q32.5,17 30,15" fill="none" stroke="#64748b" strokeWidth="0.5" /> {/* Leaf Sigil */}
           </g>
-          <g fill="#f7d348">
-            <path d="M38,15 L30,10 L40,8 L35,1 L46,8 L54,1 L51,9 L64,10 L55,15 Z" />
+          {/* Knot at back */}
+          <path d="M18,14 L12,10 M18,14 L12,18" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" />
+          
+          {/* Facial Features */}
+          <circle cx="32" cy="22" r="2" fill="#1c1917" /> {/* Eye */}
+          <path d="M31,25 Q33,26 35,25" fill="none" stroke="#92400e" strokeWidth="0.8" strokeLinecap="round" /> {/* Smirk */}
+          
+          {/* Whiskers */}
+          <g stroke="#92400e" strokeWidth="0.5" strokeLinecap="round">
+            <line x1="33" y1="24" x2="36" y2="24" />
+            <line x1="33" y1="26" x2="36" y2="25.5" />
+            <line x1="33" y1="28" x2="36" y2="27" />
           </g>
-          <path d="M38,16 L62,16 L62,22 L38,22 Z" fill="#1a4a8a" />
-          <rect x="45" y="17" width="10" height="4" rx="1" fill="#ced4da" />
+          
+          {/* Spiky Hair (Top) */}
+          <path d="M18,8 L24,-8 L30,4 L40,-2 L38,11" fill="url(#hairGrad)" stroke="#854d0e" strokeWidth="0.6" />
         </g>
       </svg>
 
       <style>{`
         .naruto-character-container.flipped { transform: scaleX(-1); }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .idle .naruto-svg { animation: bounce 2s ease-in-out infinite; }
-        .running .torso, .running .head-group { animation: bounce 0.35s ease-in-out infinite; }
+        .naruto-svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
-        @keyframes runLF { 0%, 100% { d: path("M48,75 L45,100 L38,112"); } 50% { d: path("M48,75 L60,90 L50,112"); } }
-        @keyframes runRF { 0%, 100% { d: path("M52,75 L55,100 L62,112"); } 50% { d: path("M52,75 L40,90 L45,112"); } }
-        .running .leg-left path:first-child { animation: runLF 0.35s ease-in-out infinite; }
-        .running .leg-right path:first-child { animation: runRF 0.35s ease-in-out infinite; }
-        .running .leg-left path:last-child { animation: runLF 0.35s ease-in-out infinite; }
-        .running .leg-right path:last-child { animation: runRF 0.35s ease-in-out infinite; }
+        /* IDLE STATE */
+        .idle .naruto-svg { animation: idleBreath 3s ease-in-out infinite; }
+        @keyframes idleBreath {
+          0%, 100% { transform: scaleY(1) translateY(0); }
+          50% { transform: scaleY(1.03) translateY(-2px); }
+        }
+        .idle .shinobi-head { animation: headSway 4s ease-in-out infinite; }
+        @keyframes headSway {
+          0%, 100% { transform: rotate(-1deg); }
+          50% { transform: rotate(1deg); }
+        }
+
+        /* RUNNING STATE (Shinobi Run) */
+        .running .shinobi-torso, .running .shinobi-head {
+          animation: shinobiLean 0.3s linear infinite;
+          transform-origin: 24px 44px;
+        }
+        @keyframes shinobiLean {
+          0%, 100% { transform: rotate(26deg) translate(8px, -2px); }
+          50% { transform: rotate(28deg) translate(8px, -3px); }
+        }
+        
+        .running .leg-front { transform-origin: 24px 44px; animation: cycleLegF 0.3s linear infinite; }
+        .running .leg-back { transform-origin: 24px 44px; animation: cycleLegB 0.3s linear infinite; }
+        @keyframes cycleLegF {
+          0%, 100% { transform: rotate(-35deg) scaleY(0.85); }
+          50% { transform: rotate(45deg) scaleY(1.1); }
+        }
+        @keyframes cycleLegB {
+          0%, 100% { transform: rotate(45deg) scaleY(1.1); }
+          50% { transform: rotate(-35deg) scaleY(0.85); }
+        }
+
+        .running .arm-front, .running .arm-back {
+          animation: armWind 0.3s ease-in-out infinite;
+          transform-origin: 24px 32px;
+        }
+        @keyframes armWind {
+          0%, 100% { transform: rotate(2deg); }
+          50% { transform: rotate(-2deg); }
+        }
+
+        /* JUMPING STATE */
+        .jumping .leg-front { transform: rotate(70deg) translate(-6px, -4px); transition: transform 0.2s; }
+        .jumping .leg-back { transform: rotate(-40deg) translate(4px, 2px); transition: transform 0.2s; }
+        .jumping .shinobi-torso { transform: rotate(15deg) translateY(-4px); transition: transform 0.2s; }
+        .jumping .char-shadow { transform: scale(0.6); opacity: 0.2; transition: all 0.3s; }
       `}</style>
     </div>
   );
