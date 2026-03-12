@@ -57,8 +57,8 @@ const HUD = () => {
       {(['tl','tr','bl','br'] as const).map(pos => (
         <svg key={pos} className={`book-corner book-corner--${pos}`}
           viewBox="0 0 40 40" fill="none" aria-hidden="true">
-          <path d="M2 2 L2 16 M2 2 L16 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          <circle cx="2" cy="2" r="1.5" fill="currentColor" />
+          <path d="M2 2 L2 12 M2 2 L12 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          <circle cx="2" cy="2" r="1.2" fill="currentColor" />
         </svg>
       ))}
 
@@ -73,7 +73,7 @@ const HUD = () => {
       <nav className="toc-navbar" role="navigation">
         <div className="toc-title no-select">
           <span className="toc-title__sigil">B · E · D</span>
-          <span className="toc-title__sub">The Portfolio — Vol. I</span>
+          <span className="toc-title__sub" style={{ fontSize: '0.38rem', opacity: 0.7 }}>The Portfolio — Vol. I</span>
         </div>
 
         <ul className="toc-links">
