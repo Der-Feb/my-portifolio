@@ -73,7 +73,7 @@ const HUD = () => {
       <nav className="toc-navbar" role="navigation">
         <div className="toc-title no-select">
           <span className="toc-title__sigil">B · E · D</span>
-          <span className="toc-title__sub" style={{ fontSize: '0.38rem', opacity: 0.7 }}>The Portfolio — Vol. I</span>
+          <span className="toc-title__sub">The Portfolio — Vol. I</span>
         </div>
 
         <ul className="toc-links">
