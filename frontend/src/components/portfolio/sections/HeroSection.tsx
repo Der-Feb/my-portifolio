@@ -146,7 +146,7 @@ const HeroSection = () => {
         }}>
           <div style={{ width: 40, height: 1, background: 'currentColor' }} />
           <span style={{ fontSize: '0.55rem', letterSpacing: '0.3em', textTransform: 'uppercase' }}>
-            SCROLL OR USE ARROWS TO TRAVERSE
+            USE ARROW KEYS TO TRAVERSE
           </span>
         </div>
       </div>
