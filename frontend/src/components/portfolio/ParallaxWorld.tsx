@@ -1,269 +1,353 @@
 import { useEffect, useRef, useState, ReactNode } from 'react';
 import gsap from 'gsap';
-import { triggerPageFlip } from './HUD';
 import NarutoCharacter from './NarutoCharacter';
 
 interface Props {
   children: ReactNode;
 }
 
+const NUM_SECTIONS = 4;
+const SEC_SIZE     = 1 / (NUM_SECTIONS - 1); // 0.333…
+const CHAR_SPEED   = 0.007;
+const EDGE_RIGHT   = 0.97;
+const EDGE_LEFT    = 0.03;
+
 const ParallaxWorld = ({ children }: Props) => {
   const worldRef = useRef<HTMLDivElement>(null);
-  
-  // Progress from 0 to 1 (World position)
-  const [progress, setProgress] = useState(0);
-  // Viewport position for Naruto
-  const [charX, setCharX] = useState(0.2); 
-  const [charY, setCharY] = useState(0); // Vertical offset for jumping
-  
-  const [flipped, setFlipped] = useState(false);
+
+  // ── All loop-readable state in refs (zero stale-closure risk) ──
+  const progressRef    = useRef(0);
+  const charXRef       = useRef(0.4);
+  const charYRef       = useRef(0);
+  const flippedRef     = useRef(false);
+  const isRunningRef   = useRef(false);
+  const isJumpingRef   = useRef(false);
+  const isTransRef     = useRef(false);
+  const lastSectionRef = useRef(0);
+  const keysRef        = useRef<Set<string>>(new Set());
+  const rafRef         = useRef<number | null>(null);
+
+  // ── React state — only for re-rendering the character + overlay ──
+  const [charX,     setCharX]     = useState(0.4);
+  const [charY,     setCharY]     = useState(0);
+  const [flipped,   setFlipped]   = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isJumping, setIsJumping] = useState(false);
-  
-  const keysPressed = useRef<Set<string>>(new Set());
-  const rafRef = useRef<number | null>(null);
-  const scrollTimer = useRef<number | null>(null);
-  const lastSection = useRef<number>(0);
-  const isTransitioning = useRef(false);
+  const [overlay,   setOverlay]   = useState<'hidden' | 'in' | 'out'>('hidden');
 
-  // Constants
-  const NUM_SECTIONS = 4;
-  const SEC_SIZE = 1 / (NUM_SECTIONS - 1); // Exact size of one room transition
-  const WALK_SPEED = 0.012; 
-  const SCROLL_SENSITIVITY = 0.0007;
+  // ── Stable function refs — updated every render, called by RAF ──
+  const syncWorldRef       = useRef<(p: number) => void>(() => {});
+  const doRoomTransRef     = useRef<(dir: number) => void>(() => {});
+  const walkLoopRef        = useRef<() => void>(() => {});
+  const performJumpRef     = useRef<() => void>(() => {});
 
-  const performJump = () => {
-    if (isJumping || isTransitioning.current) return;
-    setIsJumping(true);
-    
-    // Jump Arc
-    gsap.to({ val: 0 }, {
-      val: 1,
-      duration: 0.6,
-      ease: "power2.out",
-      onUpdate: function() {
-        // Simple parabolic arc: y = 4 * height * t * (1 - t)
-        const t = this.progress();
-        const height = 80;
-        setCharY(4 * height * t * (1 - t));
-      },
-      onComplete: () => {
-        setCharY(0);
-        setIsJumping(false);
-      }
-    });
-  };
-
-  // --- STABLE INPUT LISTENERS (No dependency flickering) ---
-  useEffect(() => {
-    const onKeyDown = (onKeyPress: KeyboardEvent) => {
-      const walkKeys = ['.', '>', ',', '<', 'ArrowRight', 'ArrowLeft'];
-      if (walkKeys.includes(onKeyPress.key)) {
-        keysPressed.current.add(onKeyPress.key);
-        if (!rafRef.current) moveLoop();
-      }
-      if (onKeyPress.key === 'ArrowUp' || onKeyPress.key === 'w' || onKeyPress.key === '^') {
-        performJump();
-      }
-    };
-    const onKeyUp = (onKeyPress: KeyboardEvent) => {
-      keysPressed.current.delete(onKeyPress.key);
-    };
-
-    const moveLoop = () => {
-      if (isTransitioning.current) {
-        rafRef.current = requestAnimationFrame(moveLoop);
-        return;
-      }
-
-      setCharX(prev => {
-        let next = prev;
-        const rightLabel = keysPressed.current.has('.') || keysPressed.current.has('>') || keysPressed.current.has('ArrowRight');
-        const leftLabel  = keysPressed.current.has(',') || keysPressed.current.has('<') || keysPressed.current.has('ArrowLeft');
-
-        if (rightLabel) {
-          next = prev + WALK_SPEED;
-          setFlipped(false);
-          setIsRunning(true);
-        } else if (leftLabel) {
-          next = prev - WALK_SPEED;
-          setFlipped(true);
-          setIsRunning(true);
-        } else {
-          setIsRunning(false);
-        }
-
-        // Edge detection for walking
-        if (next > 0.985) {
-          triggerWalkTransition(1);
-          return 0.985;
-        }
-        if (next < 0.015) {
-          triggerWalkTransition(-1);
-          return 0.015;
-        }
-
-        return Math.max(0, Math.min(1, next));
-      });
-
-      if (keysPressed.current.size > 0) {
-        rafRef.current = requestAnimationFrame(moveLoop);
-      } else {
-        rafRef.current = null;
-        setIsRunning(false);
-      }
-    };
-
-    const onWheel = (wheelEvent: WheelEvent) => {
-      if (wheelEvent.cancelable) wheelEvent.preventDefault();
-      if (isTransitioning.current) return;
-      
-      const delta = wheelEvent.deltaY * SCROLL_SENSITIVITY;
-      
-      setProgress(prev => {
-        const next = Math.max(0, Math.min(1, prev + delta));
-        if (delta > 0) setFlipped(false);
-        else if (delta < 0) setFlipped(true);
-        
-        if (Math.abs(delta) > 0.001) {
-          setIsRunning(true);
-          if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
-          scrollTimer.current = window.setTimeout(() => setIsRunning(false), 150);
-        }
-        return next;
-      });
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('wheel', onWheel as any, { passive: false });
-    
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('wheel', onWheel as any);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
-    };
-  }, [isJumping]); // Need to rebinding only to access latest isJumping if we use closure, but better use a ref or functional update
-
-  // --- UNIFIED LAYER SYNC ---
+  // ── syncWorld ────────────────────────────────────────────────────
   const syncWorld = (p: number) => {
     const worldDOM = worldRef.current;
     if (!worldDOM) return;
 
-    const totalWorldWidth = worldDOM.scrollWidth - window.innerWidth;
-    const worldPositionX = -p * totalWorldWidth;
+    const totalWidth     = worldDOM.scrollWidth - window.innerWidth;
+    const worldPositionX = -p * totalWidth;
 
-    // Main World
     gsap.set(worldDOM, { x: worldPositionX });
 
-    // Parallax sub-layers
-    const parallaxLayers = worldDOM.querySelectorAll<HTMLElement>('[data-parallax]');
-    parallaxLayers.forEach(layer => {
-      const parallaxSpeed = parseFloat(layer.dataset.parallax || '0');
-      gsap.set(layer, { x: worldPositionX * parallaxSpeed });
+    worldDOM.querySelectorAll<HTMLElement>('.section-room').forEach((section, i) => {
+      const sectionOffsetX = i * window.innerWidth;
+      section.querySelectorAll<HTMLElement>('[data-parallax]').forEach(layer => {
+        const speed = parseFloat(layer.dataset.parallax || '0');
+        gsap.set(layer, { x: (worldPositionX + sectionOffsetX) * speed });
+      });
     });
 
-    // Update section state (UI/Navbar)
     const sectionIndex = Math.round(p * (NUM_SECTIONS - 1));
-    if (sectionIndex !== lastSection.current) {
-      lastSection.current = sectionIndex;
-      const sectionIdList = ['hero', 'library', 'restobar', 'booth'];
-      window.dispatchEvent(new CustomEvent('sectionChange', { 
-        detail: { activeId: sectionIdList[sectionIndex] } 
+    if (sectionIndex !== lastSectionRef.current) {
+      lastSectionRef.current = sectionIndex;
+      const ids = ['hero', 'library', 'restobar', 'booth'];
+      window.dispatchEvent(new CustomEvent('sectionChange', {
+        detail: { activeId: ids[sectionIndex] },
       }));
     }
   };
+  syncWorldRef.current = syncWorld;
 
-  const progressRef = useRef(0);
-  useEffect(() => { progressRef.current = progress; }, [progress]);
+  // ── doRoomTransition ─────────────────────────────────────────────
+  const doRoomTransition = (direction: number) => {
+    if (isTransRef.current) return;
 
-  // --- TRANSITION LOGIC ---
-  const triggerWalkTransition = (direction: number) => {
-    if (isTransitioning.current) return;
-    
-    const currentIndex = lastSection.current;
-    const nextIndex = currentIndex + direction;
-    
-    if (nextIndex < 0 || nextIndex >= NUM_SECTIONS) return;
+    const nextIndex = lastSectionRef.current + direction;
+    if (nextIndex < 0 || nextIndex >= NUM_SECTIONS) {
+      // No more rooms — clamp at edge
+      const clampX = direction > 0 ? EDGE_RIGHT : EDGE_LEFT;
+      charXRef.current = clampX;
+      setCharX(clampX);
+      return;
+    }
 
-    isTransitioning.current = true;
-    triggerPageFlip('section');
+    isTransRef.current = true;
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
 
-    const startP = currentIndex * SEC_SIZE;
-    const targetPValue = nextIndex * SEC_SIZE;
-    
-    // SNAP: Force sync to start position to kill any 1-frame flashes
-    syncWorld(startP);
-    setCharX(direction > 0 ? 0.05 : 0.95);
+    const targetP = nextIndex * SEC_SIZE;
+    const exitX   = direction > 0 ?  1.15 : -0.15;
+    const entryX  = direction > 0 ? -0.08 :  1.08;
+    const landX   = direction > 0 ?  0.25 :  0.75;
 
-    // SNAPPY WORLD TRANSITION
-    const transitionObj = { p: startP }; 
-    gsap.to(transitionObj, {
-      p: targetPValue,
-      duration: 0.45,
-      ease: 'power2.inOut',
-      onUpdate: () => {
-        syncWorld(transitionObj.p);
-        setProgress(transitionObj.p);
-      },
+    const charPos = { x: charXRef.current };
+
+    // Phase 1 — character walks off screen (no overlay yet)
+    gsap.to(charPos, {
+      x: exitX,
+      duration: 0.35,
+      ease: 'power1.in',
+      onUpdate: () => { charXRef.current = charPos.x; setCharX(charPos.x); },
       onComplete: () => {
-        isTransitioning.current = false;
-      }
+
+        // Phase 2 — fade to dark
+        setOverlay('in');
+        const ov = { opacity: 0 };
+        gsap.to(ov, {
+          opacity: 1,
+          duration: 0.2,
+          ease: 'power1.in',
+          onComplete: () => {
+            // Phase 3 — while fully dark: snap world + place character at entry
+            progressRef.current = targetP;
+            syncWorldRef.current(targetP);
+            charPos.x = entryX;
+            charXRef.current = entryX;
+            setCharX(entryX);
+
+            // Phase 4 — fade back in
+            setOverlay('out');
+            gsap.to(ov, {
+              opacity: 0,
+              duration: 0.3,
+              ease: 'power1.out',
+              onComplete: () => {
+                setOverlay('hidden');
+
+                // Phase 5 — character walks in from edge
+                gsap.to(charPos, {
+                  x: landX,
+                  duration: 0.45,
+                  ease: 'power2.out',
+                  onUpdate: () => { charXRef.current = charPos.x; setCharX(charPos.x); },
+                  onComplete: () => {
+                    charXRef.current = landX;
+                    isTransRef.current = false;
+
+                    // Resume walk if key still held
+                    const walkKeys = ['ArrowRight', 'ArrowLeft', '.', '>', ',', '<'];
+                    if (walkKeys.some(k => keysRef.current.has(k)) && !rafRef.current) {
+                      rafRef.current = requestAnimationFrame(walkLoopRef.current);
+                    }
+                  },
+                });
+              },
+            });
+          },
+        });
+      },
     });
   };
+  doRoomTransRef.current = doRoomTransition;
 
-  // Sync state to DOM (Only for smooth manual scrolling)
+  // ── walkLoop ─────────────────────────────────────────────────────
+  const walkLoop = () => {
+    if (isTransRef.current) {
+      rafRef.current = requestAnimationFrame(walkLoopRef.current);
+      return;
+    }
+
+    const right = keysRef.current.has('ArrowRight') ||
+                  keysRef.current.has('.') ||
+                  keysRef.current.has('>');
+    const left  = keysRef.current.has('ArrowLeft') ||
+                  keysRef.current.has(',') ||
+                  keysRef.current.has('<');
+
+    if (right || left) {
+      const dir  = right ? 1 : -1;
+      const next = charXRef.current + dir * CHAR_SPEED;
+
+      if (right && next >= EDGE_RIGHT) {
+        charXRef.current = EDGE_RIGHT;
+        setCharX(EDGE_RIGHT);
+        doRoomTransRef.current(1);
+        return;
+      } else if (left && next <= EDGE_LEFT) {
+        charXRef.current = EDGE_LEFT;
+        setCharX(EDGE_LEFT);
+        doRoomTransRef.current(-1);
+        return;
+      } else {
+        charXRef.current = next;
+        setCharX(next);
+      }
+
+      if (flippedRef.current !== (dir < 0)) {
+        flippedRef.current = dir < 0;
+        setFlipped(dir < 0);
+      }
+      if (!isRunningRef.current) {
+        isRunningRef.current = true;
+        setIsRunning(true);
+      }
+    } else {
+      if (isRunningRef.current) {
+        isRunningRef.current = false;
+        setIsRunning(false);
+      }
+    }
+
+    if (keysRef.current.size > 0) {
+      rafRef.current = requestAnimationFrame(walkLoopRef.current);
+    } else {
+      rafRef.current = null;
+    }
+  };
+  walkLoopRef.current = walkLoop;
+
+  // ── performJump ──────────────────────────────────────────────────
+  const performJump = () => {
+    if (isJumpingRef.current || isTransRef.current) return;
+    isJumpingRef.current = true;
+    setIsJumping(true);
+
+    const pos = { y: 0 };
+    gsap.to(pos, {
+      y: 1,
+      duration: 0.6,
+      ease: 'power2.out',
+      onUpdate: () => {
+        const t = pos.y;
+        const h = 4 * 80 * t * (1 - t);
+        charYRef.current = h;
+        setCharY(h);
+      },
+      onComplete: () => {
+        charYRef.current = 0;
+        setCharY(0);
+        isJumpingRef.current = false;
+        setIsJumping(false);
+      },
+    });
+  };
+  performJumpRef.current = performJump;
+
+  // ── Input listeners — registered once ────────────────────────────
   useEffect(() => {
-    if (isTransitioning.current) return;
-    syncWorld(progress);
-  }, [progress]);
+    const walkKeys = ['ArrowRight', 'ArrowLeft', '.', '>', ',', '<'];
 
-  // Fast Travel (HUD)
-  useEffect(() => {
-    const handleJump = (e: any) => {
-      const targetP = e.detail.progress;
-      if (isTransitioning.current) return;
-      
-      isTransitioning.current = true;
-      triggerPageFlip('section');
-
-      const transitionObj = { p: progressRef.current };
-      gsap.to(transitionObj, {
-        p: targetP,
-        duration: 0.8,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-          syncWorld(transitionObj.p);
-          setProgress(transitionObj.p);
-        },
-        onComplete: () => {
-          setCharX(0.2); 
-          isTransitioning.current = false;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (walkKeys.includes(e.key)) {
+        e.preventDefault();
+        keysRef.current.add(e.key);
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(walkLoopRef.current);
         }
+      }
+      if (e.key === 'ArrowUp' || e.key === 'w') {
+        e.preventDefault();
+        performJumpRef.current();
+      }
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      keysRef.current.delete(e.key);
+      if (!walkKeys.some(k => keysRef.current.has(k))) {
+        if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+        isRunningRef.current = false;
+        setIsRunning(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup',   onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup',   onKeyUp);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []); // stable — everything accessed via refs
+
+  // ── HUD fast-travel ───────────────────────────────────────────────
+  useEffect(() => {
+    const handleJump = (e: Event) => {
+      const targetP = (e as CustomEvent).detail.progress;
+      if (isTransRef.current) return;
+
+      isTransRef.current = true;
+
+      // Fade to dark first
+      setOverlay('in');
+      const ov = { opacity: 0 };
+      gsap.to(ov, {
+        opacity: 1,
+        duration: 0.25,
+        ease: 'power1.in',
+        onComplete: () => {
+          // Snap world while dark
+          progressRef.current = targetP;
+          syncWorldRef.current(targetP);
+          charXRef.current = 0.4;
+          setCharX(0.4);
+
+          // Fade back in
+          setOverlay('out');
+          gsap.to(ov, {
+            opacity: 0,
+            duration: 0.35,
+            ease: 'power1.out',
+            onComplete: () => {
+              setOverlay('hidden');
+              isTransRef.current = false;
+            },
+          });
+        },
       });
     };
-    window.addEventListener('hudJump', handleJump as EventListener);
-    return () => window.removeEventListener('hudJump', handleJump as EventListener);
-  }, []); // Stable listener
+
+    window.addEventListener('hudJump', handleJump);
+    return () => window.removeEventListener('hudJump', handleJump);
+  }, []);
 
   return (
     <div className="world-container">
-      {/* Naruto viewport position */}
-      <div style={{
-        position: 'fixed',
-        bottom: 60 + charY, // Added charY for jumping
-        left: `${charX * 100}%`, 
-        transform: 'translateX(-50%)',
-        zIndex: 50,
-        pointerEvents: 'none',
-        // CRITICAL: Remove CSS transition to fix input lag and sliding glitches
-        transition: 'none',
-      }}>
-        <NarutoCharacter state={isJumping ? 'jumping' : isRunning ? 'running' : 'idle'} flipped={flipped} />
+      {/* Dark transition overlay */}
+      {overlay !== 'hidden' && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#08090d',
+            zIndex: 200,
+            pointerEvents: 'none',
+            animation: overlay === 'in'
+              ? 'overlayFadeIn 0.2s ease-in forwards'
+              : 'overlayFadeOut 0.3s ease-out forwards',
+          }}
+        />
+      )}
+
+      {/* Character */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 60 + charY,
+          left: `${charX * 100}%`,
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          pointerEvents: 'none',
+          transition: 'none',
+        }}
+      >
+        <NarutoCharacter
+          state={isJumping ? 'jumping' : isRunning ? 'running' : 'idle'}
+          flipped={flipped}
+        />
       </div>
 
+      {/* World */}
       <div
         ref={worldRef}
         style={{
