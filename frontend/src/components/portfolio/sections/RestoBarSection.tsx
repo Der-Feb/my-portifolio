@@ -327,34 +327,49 @@ const BackBar = () => {
 // ─── RestoBarSection ──────────────────────────────────────────────────────────
 const RestoBarSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [visibleNPCs, setVisibleNPCs] = useState<Set<number>>(new Set());
+  // ── Speaking state ──
+  // activeIdx  = which NPC is currently speaking (-1 = none)
+  // phase      = 'in' | 'hold' | 'out'
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const [phase, setPhase]         = useState<'in' | 'hold' | 'out'>('in');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── NPC intersection observer ──
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const npcEls = section.querySelectorAll<HTMLElement>('[data-npc-index]');
-    const observers: IntersectionObserver[] = [];
-    npcEls.forEach((el) => {
-      const idx = parseInt(el.dataset.npcIndex || '0', 10);
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          setVisibleNPCs(prev => {
-            const next = new Set(prev);
-            entry.isIntersecting ? next.add(idx) : next.delete(idx);
-            return next;
-          });
-        },
-        { threshold: 0.4 }
-      );
-      obs.observe(el);
-      observers.push(obs);
-    });
-    return () => observers.forEach(o => o.disconnect());
-  }, []);
-
-  // NPC count
   const npcCount = TESTIMONIALS.length;
+
+  // ms each NPC speaks — proportional to comment length, clamped 4–8s
+  const speakDuration = (idx: number) =>
+    Math.min(8000, Math.max(4000, TESTIMONIALS[idx].comment.length * 28));
+
+  useEffect(() => {
+    let current = 0;
+
+    const speak = (idx: number) => {
+      setActiveIdx(idx);
+      setPhase('in');
+
+      // after fade-in (400ms) → hold
+      timerRef.current = setTimeout(() => {
+        setPhase('hold');
+
+        // hold for speak duration → fade out
+        timerRef.current = setTimeout(() => {
+          setPhase('out');
+
+          // after fade-out (400ms) → next NPC
+          timerRef.current = setTimeout(() => {
+            current = (idx + 1) % npcCount;
+            speak(current);
+          }, 400);
+        }, speakDuration(idx));
+      }, 400);
+    };
+
+    // small initial delay so the scene renders first
+    timerRef.current = setTimeout(() => speak(0), 800);
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section
@@ -581,7 +596,7 @@ const RestoBarSection = () => {
                 <ellipse cx={cx-18} cy={seatY+74} rx="4" ry="2" fill="#3a2a1a" />
                 <ellipse cx={cx+18} cy={seatY+74} rx="4" ry="2" fill="#3a2a1a" />
                 {/* NPC — seated, torso above seatY, legs dangle below */}
-                <g style={{ opacity: visibleNPCs.has(i) ? 0.9 : 0.5, transition: 'opacity 0.4s' }}>
+                <g style={{ opacity: activeIdx === i ? 1 : 0.4, transition: 'opacity 0.4s' }}>
                   {/* Head */}
                   <circle cx={cx} cy={seatY-62} r="10" fill={t.silhouetteColor} />
                   {/* Torso leaning forward onto counter */}
@@ -604,52 +619,89 @@ const RestoBarSection = () => {
         </svg>
       </div>
 
-      {/* ── Dialogue bubbles — above each NPC ── */}
-      <div style={{
-        position: 'absolute',
-        left: 0, right: 0,
-        bottom: '44%',
-        zIndex: 14,
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'flex-end',
-        padding: '0 3vw',
-        gap: '0.5vw',
-        pointerEvents: 'none',
-      }}>
-        {TESTIMONIALS.map((t, i) => (
-          <div key={i} data-npc-index={i} style={{ flex: '1 1 0', minWidth: 0 }}>
-            <div
-              className={`dialogue-bubble${visibleNPCs.has(i) ? ' visible' : ''}`}
-              style={{ transitionDelay: `${i * 0.12}s`, padding: '10px 12px' }}
-            >
+      {/* ── Speaking tooltip — one at a time, above the active NPC ── */}
+      {activeIdx >= 0 && (() => {
+        const t = TESTIMONIALS[activeIdx];
+        // NPC x positions mirror the SVG: cx = 100 + i * (1000 / (npcCount-1))
+        // Map SVG x (0–1200) → screen % (0–100)
+        const svgX = 100 + activeIdx * (1000 / (npcCount - 1));
+        const pct  = (svgX / 1200) * 100;
+        const isVisible = phase === 'in' || phase === 'hold';
+        return (
+          <div
+            key={activeIdx}
+            style={{
+              position: 'absolute',
+              bottom: '44%',
+              left: `${pct}%`,
+              transform: 'translateX(-50%)',
+              zIndex: 20,
+              width: 'clamp(160px, 18vw, 220px)',
+              pointerEvents: 'none',
+              opacity: isVisible ? 1 : 0,
+              translate: isVisible ? '0 0' : '0 12px',
+              transition: 'opacity 0.4s ease, translate 0.4s ease',
+            }}
+          >
+            {/* Speech bubble tail */}
+            <div style={{
+              position: 'absolute',
+              bottom: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0, height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '9px solid rgba(26,30,42,0.97)',
+            }} />
+            <div style={{
+              background: 'rgba(26,30,42,0.97)',
+              border: `1px solid ${t.silhouetteColor}55`,
+              borderRadius: 4,
+              padding: '10px 12px',
+              boxShadow: `0 0 18px ${t.silhouetteColor}22, 0 4px 20px rgba(0,0,0,0.6)`,
+            }}>
               <span style={{
-                fontFamily: 'Georgia, serif', fontSize: '1.2rem',
-                color: 'var(--naruto-orange)', lineHeight: 0.5,
-                display: 'block', marginBottom: 4, opacity: 0.6,
+                fontFamily: 'Georgia, serif',
+                fontSize: '1.1rem',
+                color: t.silhouetteColor,
+                lineHeight: 0.5,
+                display: 'block',
+                marginBottom: 5,
+                opacity: 0.7,
               }}>"</span>
               <p style={{
-                color: 'var(--text-primary)', fontSize: '0.58rem',
-                lineHeight: 1.5, fontStyle: 'italic',
-                display: '-webkit-box', WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                color: 'var(--text-primary)',
+                fontSize: '0.58rem',
+                lineHeight: 1.55,
+                fontStyle: 'italic',
+                margin: 0,
               }}>
                 {t.comment}
               </p>
-              <div style={{ marginTop: 6, borderTop: '1px solid rgba(232,125,43,0.15)', paddingTop: 5 }}>
+              <div style={{
+                marginTop: 8,
+                paddingTop: 6,
+                borderTop: `1px solid ${t.silhouetteColor}33`,
+              }}>
                 <span style={{
-                  display: 'block', color: 'var(--naruto-orange)',
-                  fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.06em',
+                  display: 'block',
+                  color: t.silhouetteColor,
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '0.68rem',
+                  letterSpacing: '0.06em',
                 }}>{t.name}</span>
                 <span style={{
-                  fontSize: '0.52rem', color: 'var(--text-dim)',
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                }}>{t.role}</span>
+                  fontSize: '0.52rem',
+                  color: 'var(--text-dim)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}>{t.role} · {t.company}</span>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })()}
 
 
     </section>
