@@ -22,35 +22,35 @@ const BarStool = ({ x }: { x: number }) => (
   </g>
 );
 
-// ─── Seated NPC ───────────────────────────────────────────────────────────────
+// ─── Seated NPC — same 40×64 canvas as Naruto ────────────────────────────────
 const SeatedNPC = ({ color, active, flipped }: { color: string; active: boolean; flipped?: boolean }) => (
   <svg
-    width="70" height="110" viewBox="0 0 70 110" fill="none"
+    width="40" height="64" viewBox="0 0 40 64" fill="none"
     style={{
       opacity: active ? 0.9 : 0.5,
       transition: 'opacity 0.4s',
       transform: flipped ? 'scaleX(-1)' : undefined,
+      overflow: 'visible',
     }}
   >
     {/* Head */}
-    <circle cx="35" cy="14" r="11" fill={color} />
-    {/* Torso leaning forward */}
-    <path d="M22 25 Q35 22 48 25 L44 62 Q35 58 26 62 Z" fill={color} />
-    {/* Arm on counter (holding drink) */}
-    <path d="M44 32 Q56 36 58 44" stroke={color} strokeWidth="7" strokeLinecap="round" fill="none" />
-    {/* Drink in hand */}
-    <rect x="55" y="38" width="8" height="14" rx="2" fill="rgba(255,200,80,0.7)" stroke={color} strokeWidth="1" />
-    <rect x="55" y="38" width="8" height="5" rx="1" fill="rgba(255,220,120,0.9)" />
+    <circle cx="20" cy="10" r="7" fill={color} />
+    {/* Torso leaning forward over counter */}
+    <path d="M13 17 Q20 15 27 17 L25 36 Q20 34 15 36 Z" fill={color} />
+    {/* Arm on counter holding drink */}
+    <path d="M25 22 Q32 25 33 30" stroke={color} strokeWidth="4" strokeLinecap="round" fill="none" />
+    {/* Drink */}
+    <rect x="31" y="27" width="5" height="8" rx="1.5" fill="rgba(255,200,80,0.8)" />
+    <rect x="31" y="27" width="5" height="3" rx="1" fill="rgba(255,230,130,0.9)" />
     {/* Other arm resting */}
-    <path d="M26 32 Q18 40 20 50" stroke={color} strokeWidth="6" strokeLinecap="round" fill="none" />
-    {/* Bent legs dangling */}
-    <path d="M28 62 Q24 78 22 92" stroke={color} strokeWidth="7" strokeLinecap="round" fill="none" />
-    <path d="M42 62 Q46 78 48 92" stroke={color} strokeWidth="7" strokeLinecap="round" fill="none" />
-    {/* Lower legs bent */}
-    <path d="M22 92 Q18 100 20 108" stroke={color} strokeWidth="6" strokeLinecap="round" fill="none" />
-    <path d="M48 92 Q52 100 50 108" stroke={color} strokeWidth="6" strokeLinecap="round" fill="none" />
-    {/* Active glow */}
-    {active && <circle cx="35" cy="50" r="32" fill="rgba(232,125,43,0.05)" />}
+    <path d="M15 22 Q9 27 10 33" stroke={color} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+    {/* Bent legs dangling from stool */}
+    <path d="M16 36 Q14 46 13 55" stroke={color} strokeWidth="4" strokeLinecap="round" fill="none" />
+    <path d="M24 36 Q26 46 27 55" stroke={color} strokeWidth="4" strokeLinecap="round" fill="none" />
+    {/* Lower legs bent back */}
+    <path d="M13 55 Q10 60 11 64" stroke={color} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+    <path d="M27 55 Q30 60 29 64" stroke={color} strokeWidth="3.5" strokeLinecap="round" fill="none" />
+    {active && <circle cx="20" cy="32" r="18" fill="rgba(232,125,43,0.05)" />}
   </svg>
 );
 
@@ -324,113 +324,6 @@ const BackBar = () => {
   );
 };
 
-// ─── Bar Door ─────────────────────────────────────────────────────────────────
-const BarDoor = ({ side, open }: { side: 'left' | 'right'; open: boolean }) => {
-  const isLeft = side === 'left';
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        [isLeft ? 'left' : 'right']: 0,
-        width: 'clamp(60px, 8vw, 110px)',
-        zIndex: 20,
-        perspective: '800px',
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          transformOrigin: isLeft ? 'left center' : 'right center',
-          transform: open
-            ? `rotateY(${isLeft ? '-85deg' : '85deg'})`
-            : 'rotateY(0deg)',
-          transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-          transformStyle: 'preserve-3d',
-          position: 'relative',
-        }}
-      >
-        <svg
-          width="100%" height="100%"
-          viewBox="0 0 100 600"
-          preserveAspectRatio="none"
-          style={{ display: 'block' }}
-        >
-          <defs>
-            <linearGradient id={`doorWood${side}`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"   stopColor={isLeft ? '#2a1f0e' : '#1a1208'} />
-              <stop offset="20%"  stopColor={isLeft ? '#3a2a12' : '#2a1f0e'} />
-              <stop offset="45%"  stopColor={isLeft ? '#2e2210' : '#241a0c'} />
-              <stop offset="70%"  stopColor={isLeft ? '#3a2a12' : '#2a1f0e'} />
-              <stop offset="100%" stopColor={isLeft ? '#1a1208' : '#2a1f0e'} />
-            </linearGradient>
-          </defs>
-
-          {/* Door body */}
-          <rect x="0" y="0" width="100" height="600" fill={`url(#doorWood${side})`} />
-
-          {/* Wood grain lines */}
-          {[8, 18, 28, 40, 52, 62, 74, 84].map((gx, i) => (
-            <line key={i} x1={gx} y1="0" x2={gx + (i % 2 === 0 ? 3 : -2)} y2="600"
-              stroke="rgba(0,0,0,0.18)" strokeWidth={i % 3 === 0 ? 1.5 : 0.8} />
-          ))}
-
-          {/* Outer border */}
-          <rect x="4" y="4" width="92" height="592" fill="none" stroke="rgba(200,160,60,0.25)" strokeWidth="2" rx="1" />
-
-          {/* Upper inset panel */}
-          <rect x="12" y="20" width="76" height="220" rx="3"
-            fill="rgba(0,0,0,0.2)" stroke="rgba(200,160,60,0.2)" strokeWidth="1.5" />
-          <rect x="18" y="26" width="64" height="208" rx="2"
-            fill="none" stroke="rgba(200,160,60,0.1)" strokeWidth="1" />
-
-          {/* Lower inset panel */}
-          <rect x="12" y="260" width="76" height="300" rx="3"
-            fill="rgba(0,0,0,0.2)" stroke="rgba(200,160,60,0.2)" strokeWidth="1.5" />
-          <rect x="18" y="266" width="64" height="288" rx="2"
-            fill="none" stroke="rgba(200,160,60,0.1)" strokeWidth="1" />
-
-          {/* Handle */}
-          <rect
-            x={isLeft ? 72 : 14} y="275" width="14" height="50" rx="7"
-            fill="#4a3a1a" stroke="rgba(200,160,60,0.6)" strokeWidth="1.5"
-          />
-          <rect
-            x={isLeft ? 75 : 17} y="278" width="8" height="44" rx="4"
-            fill="#6a5a2a"
-          />
-
-          {/* Hinge bolts — top */}
-          {[40, 60].map((hy, i) => (
-            <g key={i}>
-              <rect x={isLeft ? 0 : 82} y={hy} width="18" height="28" rx="2"
-                fill="#3a2a0a" stroke="rgba(200,160,60,0.4)" strokeWidth="1" />
-              <circle cx={isLeft ? 9 : 91} cy={hy + 7}  r="3" fill="#5a4a1a" stroke="rgba(200,160,60,0.5)" strokeWidth="0.8" />
-              <circle cx={isLeft ? 9 : 91} cy={hy + 21} r="3" fill="#5a4a1a" stroke="rgba(200,160,60,0.5)" strokeWidth="0.8" />
-            </g>
-          ))}
-          {/* Hinge bolts — bottom */}
-          {[480, 500].map((hy, i) => (
-            <g key={i}>
-              <rect x={isLeft ? 0 : 82} y={hy} width="18" height="28" rx="2"
-                fill="#3a2a0a" stroke="rgba(200,160,60,0.4)" strokeWidth="1" />
-              <circle cx={isLeft ? 9 : 91} cy={hy + 7}  r="3" fill="#5a4a1a" stroke="rgba(200,160,60,0.5)" strokeWidth="0.8" />
-              <circle cx={isLeft ? 9 : 91} cy={hy + 21} r="3" fill="#5a4a1a" stroke="rgba(200,160,60,0.5)" strokeWidth="0.8" />
-            </g>
-          ))}
-
-          {/* Edge shadow for depth */}
-          <rect x={isLeft ? 90 : 0} y="0" width="10" height="600"
-            fill={`rgba(0,0,0,${isLeft ? 0.35 : 0.2})`} />
-        </svg>
-      </div>
-    </div>
-  );
-};
-
 // ─── RestoBarSection ──────────────────────────────────────────────────────────
 const RestoBarSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -460,11 +353,8 @@ const RestoBarSection = () => {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
-  // NPC positions spread across the counter
+  // NPC count
   const npcCount = TESTIMONIALS.length;
-  const npcPositions = TESTIMONIALS.map((_, i) =>
-    10 + (i / (npcCount - 1)) * 80
-  );
 
   return (
     <section
@@ -522,104 +412,237 @@ const RestoBarSection = () => {
         </h2>
       </div>
 
-      {/* ── Back-bar scene ── */}
-      <div style={{
-        position: 'absolute',
-        left: 0, right: 0,
-        bottom: '28%',
-        height: '52%',
-        zIndex: 9,
-        pointerEvents: 'none',
-      }}>
-        <BackBar />
-      </div>
-
-      {/* ── Counter + NPCs + Stools ── */}
+      {/* ── UNIFIED BAR SCENE ── */}
       <div style={{
         position: 'absolute',
         left: 0, right: 0,
         bottom: 0,
-        height: '38%',
-        zIndex: 12,
+        height: '78%',
+        zIndex: 10,
         pointerEvents: 'none',
       }}>
-        <svg viewBox="0 0 1200 160" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">
+        <svg viewBox="0 0 1200 600" width="100%" height="100%" preserveAspectRatio="xMidYMax meet">
           <defs>
-            <linearGradient id="counterTopGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#3a2a12" />
-              <stop offset="40%"  stopColor="#2a1e0a" />
+            <linearGradient id="bbMirror" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="#0a0c14" />
+              <stop offset="50%"  stopColor="#1a1e2a" />
+              <stop offset="100%" stopColor="#0a0c14" />
+            </linearGradient>
+            <linearGradient id="bbWood" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stopColor="#2a1f0e" />
               <stop offset="100%" stopColor="#150f05" />
+            </linearGradient>
+            <linearGradient id="bbCounter" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stopColor="#4a3418" />
+              <stop offset="100%" stopColor="#1e1508" />
             </linearGradient>
           </defs>
 
-          {/* Bar stools — sitting on the counter top */}
-          {TESTIMONIALS.map((_, i) => {
-            const sx = 60 + (i / (npcCount - 1)) * 1080;
-            return <BarStool key={i} x={sx} />;
-          })}
+          {/* BACK WALL */}
+          <rect x="0" y="0" width="1200" height="340" fill="url(#bbMirror)" />
+          <rect x="15" y="8" width="1170" height="310" fill="none" stroke="rgba(200,160,60,0.2)" strokeWidth="1.5" rx="2" />
 
-          {/* Seated NPCs */}
-          {TESTIMONIALS.map((t, i) => {
-            const nx = 60 + (i / (npcCount - 1)) * 1080;
+          {/* HANGING GLASS ROD */}
+          <rect x="50" y="28" width="1100" height="5" rx="2.5" fill="#4a3a2a" stroke="#6a5a3a" strokeWidth="1" />
+          {[120, 600, 1080].map((bx, i) => (
+            <g key={i}>
+              <rect x={bx - 4} y="16" width="8" height="14" rx="2" fill="#3a2a1a" />
+              <circle cx={bx} cy="14" r="3" fill="#6a5a3a" />
+            </g>
+          ))}
+          {Array.from({ length: 14 }, (_, i) => {
+            const gx = 80 + i * 80;
             return (
-              <foreignObject key={i} x={nx - 35} y={0} width="70" height="110"
-                data-npc-index={i}>
-                <SeatedNPC
-                  color={t.silhouetteColor}
-                  active={visibleNPCs.has(i)}
-                  flipped={i % 2 === 1}
-                />
-              </foreignObject>
+              <g key={i}>
+                <line x1={gx} y1="33" x2={gx} y2="42" stroke="rgba(180,220,255,0.5)" strokeWidth="1.2" />
+                <path d={`M${gx-6},42 Q${gx-6},54 ${gx},56 Q${gx+6},54 ${gx+6},42 Z`}
+                  fill="rgba(180,220,255,0.1)" stroke="rgba(180,220,255,0.4)" strokeWidth="0.8" />
+                <ellipse cx={gx} cy="56" rx="6" ry="2" fill="none" stroke="rgba(180,220,255,0.35)" strokeWidth="0.8" />
+              </g>
             );
           })}
 
-          {/* Counter top edge — thin strip at the very bottom */}
-          <rect x="0" y="140" width="1200" height="20" fill="url(#counterTopGrad)" />
-          <rect x="0" y="138" width="1200" height="6" rx="1" fill="#4a3418" stroke="rgba(200,160,60,0.3)" strokeWidth="1" />
-          <rect x="0" y="138" width="1200" height="2" fill="rgba(200,160,60,0.15)" />
+          {/* UPPER SHELF */}
+          <rect x="30" y="90" width="1140" height="9" rx="2" fill="url(#bbWood)" stroke="rgba(200,160,60,0.25)" strokeWidth="1" />
+          {[
+            {h:38,w:8,c:'#1a3a1a',l:'#2a6a2a',k:'#c8a020'},{h:44,w:7,c:'#3a1a0a',l:'#c84020',k:'#888'},
+            {h:32,w:9,c:'#0a1a3a',l:'#2040a0',k:'#c0c0c0'},{h:40,w:7,c:'#2a0a0a',l:'#a02020',k:'#c8a020'},
+            {h:36,w:8,c:'#1a1a0a',l:'#a0a020',k:'#888'},{h:42,w:7,c:'#0a2a1a',l:'#20a060',k:'#c0c0c0'},
+            {h:34,w:9,c:'#2a1a2a',l:'#8020a0',k:'#c8a020'},{h:46,w:7,c:'#3a2a0a',l:'#c08020',k:'#888'},
+            {h:38,w:8,c:'#0a2a2a',l:'#20a0a0',k:'#c0c0c0'},{h:40,w:7,c:'#1a0a2a',l:'#6020c0',k:'#c8a020'},
+            {h:44,w:8,c:'#2a1a0a',l:'#c06020',k:'#888'},{h:36,w:7,c:'#0a1a1a',l:'#208080',k:'#c0c0c0'},
+            {h:42,w:9,c:'#1a2a0a',l:'#60a020',k:'#c8a020'},{h:34,w:7,c:'#2a0a1a',l:'#c02060',k:'#888'},
+            {h:38,w:8,c:'#0a0a2a',l:'#2020c0',k:'#c0c0c0'},{h:44,w:7,c:'#1a2a1a',l:'#20a040',k:'#c8a020'},
+            {h:32,w:9,c:'#2a1a1a',l:'#a04040',k:'#888'},{h:40,w:7,c:'#0a2a0a',l:'#40a020',k:'#c0c0c0'},
+          ].map((b, i, arr) => {
+            const bx = 60 + i * ((1080) / (arr.length - 1));
+            const neck = Math.round(b.h * 0.28); const body = b.h - neck;
+            return (
+              <g key={i}>
+                <rect x={bx-b.w/2} y={90-body} width={b.w} height={body} rx="2" fill={b.c} />
+                <rect x={bx-b.w/2+1.5} y={90-body-neck} width={b.w-3} height={neck} rx="1.5" fill={b.c} />
+                <rect x={bx-b.w/2+1} y={90-body-neck-4} width={b.w-2} height={5} rx="1" fill={b.k} />
+                <rect x={bx-b.w/2+1} y={90-body+4} width={b.w-2} height={Math.round(body*0.45)} rx="1" fill={b.l} opacity="0.85" />
+                <rect x={bx-b.w/2+1.5} y={90-body+2} width={1.5} height={body-6} rx="1" fill="rgba(255,255,255,0.12)" />
+              </g>
+            );
+          })}
+
+          {/* LOWER SHELF */}
+          <rect x="30" y="175" width="1140" height="9" rx="2" fill="url(#bbWood)" stroke="rgba(200,160,60,0.25)" strokeWidth="1" />
+          {[
+            {h:30,w:9,c:'#2a1a0a',l:'#c84020',k:'#c8a020'},{h:34,w:8,c:'#0a2a1a',l:'#20a060',k:'#888'},
+            {h:28,w:10,c:'#1a0a2a',l:'#8020c0',k:'#c0c0c0'},{h:36,w:8,c:'#2a2a0a',l:'#c0a020',k:'#c8a020'},
+            {h:30,w:9,c:'#0a1a2a',l:'#2060c0',k:'#888'},{h:32,w:8,c:'#1a2a0a',l:'#60c020',k:'#c0c0c0'},
+            {h:28,w:10,c:'#2a0a0a',l:'#c02020',k:'#c8a020'},{h:34,w:8,c:'#0a2a2a',l:'#20c0a0',k:'#888'},
+            {h:30,w:9,c:'#1a1a2a',l:'#6060c0',k:'#c0c0c0'},{h:36,w:8,c:'#2a0a1a',l:'#c02080',k:'#c8a020'},
+            {h:28,w:10,c:'#0a0a1a',l:'#2020a0',k:'#888'},{h:32,w:8,c:'#1a2a2a',l:'#20a0a0',k:'#c0c0c0'},
+            {h:30,w:9,c:'#2a1a2a',l:'#a020a0',k:'#c8a020'},{h:34,w:8,c:'#0a1a0a',l:'#208020',k:'#888'},
+            {h:28,w:10,c:'#1a0a0a',l:'#a02020',k:'#c0c0c0'},{h:32,w:8,c:'#2a2a1a',l:'#a0a020',k:'#c8a020'},
+          ].map((b, i, arr) => {
+            const bx = 60 + i * ((1080) / (arr.length - 1));
+            const neck = Math.round(b.h * 0.28); const body = b.h - neck;
+            return (
+              <g key={i}>
+                <rect x={bx-b.w/2} y={175-body} width={b.w} height={body} rx="2" fill={b.c} />
+                <rect x={bx-b.w/2+1.5} y={175-body-neck} width={b.w-3} height={neck} rx="1.5" fill={b.c} />
+                <rect x={bx-b.w/2+1} y={175-body-neck-4} width={b.w-2} height={5} rx="1" fill={b.k} />
+                <rect x={bx-b.w/2+1} y={175-body+4} width={b.w-2} height={Math.round(body*0.45)} rx="1" fill={b.l} opacity="0.85" />
+              </g>
+            );
+          })}
+
+          {/* CABINET */}
+          <rect x="20" y="184" width="1160" height="100" rx="2" fill="url(#bbWood)" stroke="rgba(200,160,60,0.2)" strokeWidth="1.5" />
+          {[0,1,2].map(d => {
+            const dw = (1160 - 30) / 3; const dx = 25 + d * (dw + 10);
+            return (
+              <g key={d}>
+                <rect x={dx} y="190" width={dw} height="88" rx="2" fill="#1a1208" stroke="rgba(200,160,60,0.18)" strokeWidth="1" />
+                <rect x={dx+8} y="198" width={dw-16} height="72" rx="1" fill="none" stroke="rgba(200,160,60,0.12)" strokeWidth="1" />
+                <circle cx={dx+dw-16} cy="234" r="4" fill="#6a5a3a" stroke="rgba(200,160,60,0.5)" strokeWidth="1" />
+              </g>
+            );
+          })}
+
+          {/* PENDANT LIGHTS */}
+          {[200, 600, 1000].map((lx, i) => (
+            <g key={i}>
+              <line x1={lx} y1="0" x2={lx} y2="50" stroke="rgba(80,70,50,0.6)" strokeWidth="1.5" />
+              <path d={`M${lx-18},50 L${lx-30},80 L${lx+30},80 L${lx+18},50 Z`} fill="#1a1208" stroke="rgba(200,160,60,0.3)" strokeWidth="1" />
+              <circle cx={lx} cy="52" r="5" fill="rgba(255,220,100,0.6)" />
+              <path d={`M${lx-30},80 L${lx-80},284 L${lx+80},284 L${lx+30},80 Z`} fill="rgba(255,200,80,0.018)" />
+            </g>
+          ))}
+
+          {/* COUNTER TOP — y=284 */}
+          <rect x="0" y="284" width="1200" height="56" fill="url(#bbCounter)" />
+          <rect x="0" y="282" width="1200" height="6" rx="1" fill="#5a4020" stroke="rgba(200,160,60,0.35)" strokeWidth="1" />
+          <rect x="0" y="282" width="1200" height="2" fill="rgba(200,160,60,0.2)" />
+          {/* Glasses on counter */}
+          {[150,300,500,700,900,1050].map((gx, gi) => {
+            const types = ['pint','rocks','wine','pint','rocks','wine'] as const;
+            const gt = types[gi];
+            if (gt === 'pint') return (
+              <g key={gi}>
+                <path d={`M${gx-6},282 L${gx-8},260 L${gx+8},260 L${gx+6},282 Z`} fill="rgba(180,220,255,0.13)" stroke="rgba(180,220,255,0.38)" strokeWidth="0.8" />
+                <ellipse cx={gx} cy="260" rx="8" ry="2.5" fill="rgba(255,255,255,0.55)" />
+                <path d={`M${gx-5},280 L${gx-7},268 L${gx+7},268 L${gx+5},280 Z`} fill="rgba(200,160,40,0.45)" />
+              </g>
+            );
+            if (gt === 'wine') return (
+              <g key={gi}>
+                <path d={`M${gx-7},272 Q${gx-7},282 ${gx},284 Q${gx+7},282 ${gx+7},272 Z`} fill="rgba(180,220,255,0.13)" stroke="rgba(180,220,255,0.38)" strokeWidth="0.8" />
+                <line x1={gx} y1="284" x2={gx} y2="288" stroke="rgba(180,220,255,0.4)" strokeWidth="1.5" />
+                <ellipse cx={gx} cy="289" rx="6" ry="2" fill="rgba(180,220,255,0.18)" stroke="rgba(180,220,255,0.35)" strokeWidth="0.8" />
+              </g>
+            );
+            return (
+              <g key={gi}>
+                <path d={`M${gx-8},282 L${gx-7},266 L${gx+7},266 L${gx+8},282 Z`} fill="rgba(180,220,255,0.11)" stroke="rgba(180,220,255,0.35)" strokeWidth="0.8" />
+                <rect x={gx-7} y="264" width="14" height="3" rx="1" fill="rgba(180,220,255,0.2)" />
+              </g>
+            );
+          })}
+
+          {/* STOOLS + SEATED NPCs — stool seat at y=340, NPC sits on it */}
+          {TESTIMONIALS.map((t, i) => {
+            const cx = 100 + i * ((1000) / (npcCount - 1));
+            const seatY = 340;
+            return (
+              <g key={i} data-npc-index={i}>
+                {/* Stool */}
+                <ellipse cx={cx} cy={seatY} rx="18" ry="6" fill="#3a2a1a" stroke="#5a3a20" strokeWidth="1.5" />
+                <ellipse cx={cx} cy={seatY-2} rx="16" ry="5" fill="#4a3020" />
+                <line x1={cx} y1={seatY+6} x2={cx} y2={seatY+54} stroke="#6a5a4a" strokeWidth="4" strokeLinecap="round" />
+                <ellipse cx={cx} cy={seatY+38} rx="13" ry="4" fill="none" stroke="#7a6a5a" strokeWidth="2.5" />
+                <line x1={cx-4} y1={seatY+50} x2={cx-18} y2={seatY+72} stroke="#5a4a3a" strokeWidth="3" strokeLinecap="round" />
+                <line x1={cx+4} y1={seatY+50} x2={cx+18} y2={seatY+72} stroke="#5a4a3a" strokeWidth="3" strokeLinecap="round" />
+                <ellipse cx={cx-18} cy={seatY+74} rx="4" ry="2" fill="#3a2a1a" />
+                <ellipse cx={cx+18} cy={seatY+74} rx="4" ry="2" fill="#3a2a1a" />
+                {/* NPC — seated, torso above seatY, legs dangle below */}
+                <g style={{ opacity: visibleNPCs.has(i) ? 0.9 : 0.5, transition: 'opacity 0.4s' }}>
+                  {/* Head */}
+                  <circle cx={cx} cy={seatY-62} r="10" fill={t.silhouetteColor} />
+                  {/* Torso leaning forward onto counter */}
+                  <path d={`M${cx-10},${seatY-50} Q${cx},${seatY-53} ${cx+10},${seatY-50} L${cx+8},${seatY-22} Q${cx},${seatY-19} ${cx-8},${seatY-22} Z`} fill={t.silhouetteColor} />
+                  {/* Arm on counter with drink */}
+                  <path d={`M${cx+8},${seatY-38} Q${cx+22},${seatY-32} ${cx+26},${seatY-24}`} stroke={t.silhouetteColor} strokeWidth="6" strokeLinecap="round" fill="none" />
+                  <rect x={cx+23} y={seatY-30} width="7" height="11" rx="2" fill="rgba(255,200,80,0.85)" />
+                  {/* Other arm */}
+                  <path d={`M${cx-8},${seatY-38} Q${cx-18},${seatY-30} ${cx-16},${seatY-20}`} stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
+                  {/* Legs dangling from stool seat */}
+                  <path d={`M${cx-5},${seatY-22} Q${cx-8},${seatY-4} ${cx-10},${seatY+14}`} stroke={t.silhouetteColor} strokeWidth="6" strokeLinecap="round" fill="none" />
+                  <path d={`M${cx+5},${seatY-22} Q${cx+8},${seatY-4} ${cx+10},${seatY+14}`} stroke={t.silhouetteColor} strokeWidth="6" strokeLinecap="round" fill="none" />
+                  {/* Lower legs bent */}
+                  <path d={`M${cx-10},${seatY+14} Q${cx-14},${seatY+26} ${cx-12},${seatY+36}`} stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
+                  <path d={`M${cx+10},${seatY+14} Q${cx+14},${seatY+26} ${cx+12},${seatY+36}`} stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
+                </g>
+              </g>
+            );
+          })}
         </svg>
       </div>
 
-      {/* ── Dialogue bubbles ── */}
+      {/* ── Dialogue bubbles — above each NPC ── */}
       <div style={{
         position: 'absolute',
         left: 0, right: 0,
-        bottom: '36%',
+        bottom: '44%',
         zIndex: 14,
         display: 'flex',
         justifyContent: 'space-around',
         alignItems: 'flex-end',
-        padding: '0 4vw',
-        gap: '1vw',
+        padding: '0 3vw',
+        gap: '0.5vw',
         pointerEvents: 'none',
       }}>
         {TESTIMONIALS.map((t, i) => (
-          <div key={i} data-npc-index={i}
-            style={{ flex: '1 1 0', minWidth: 0, maxWidth: 200 }}>
+          <div key={i} data-npc-index={i} style={{ flex: '1 1 0', minWidth: 0 }}>
             <div
               className={`dialogue-bubble${visibleNPCs.has(i) ? ' visible' : ''}`}
-              style={{ transitionDelay: `${i * 0.12}s`, padding: '12px 14px' }}
+              style={{ transitionDelay: `${i * 0.12}s`, padding: '10px 12px' }}
             >
               <span style={{
-                fontFamily: 'Georgia, serif', fontSize: '1.4rem',
+                fontFamily: 'Georgia, serif', fontSize: '1.2rem',
                 color: 'var(--naruto-orange)', lineHeight: 0.5,
                 display: 'block', marginBottom: 4, opacity: 0.6,
               }}>"</span>
               <p style={{
-                color: 'var(--text-primary)', fontSize: '0.6rem',
-                lineHeight: 1.55, fontStyle: 'italic',
-                display: '-webkit-box', WebkitLineClamp: 4,
+                color: 'var(--text-primary)', fontSize: '0.58rem',
+                lineHeight: 1.5, fontStyle: 'italic',
+                display: '-webkit-box', WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical', overflow: 'hidden',
               }}>
                 {t.comment}
               </p>
-              <div style={{ marginTop: 8, borderTop: '1px solid rgba(232,125,43,0.15)', paddingTop: 6 }}>
+              <div style={{ marginTop: 6, borderTop: '1px solid rgba(232,125,43,0.15)', paddingTop: 5 }}>
                 <span style={{
                   display: 'block', color: 'var(--naruto-orange)',
-                  fontFamily: 'var(--font-display)', fontSize: '0.7rem', letterSpacing: '0.06em',
+                  fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.06em',
                 }}>{t.name}</span>
                 <span style={{
-                  fontSize: '0.55rem', color: 'var(--text-dim)',
+                  fontSize: '0.52rem', color: 'var(--text-dim)',
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                 }}>{t.role}</span>
               </div>
