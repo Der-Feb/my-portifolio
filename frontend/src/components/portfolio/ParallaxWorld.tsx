@@ -91,6 +91,10 @@ const ParallaxWorld = ({ children }: Props) => {
     const entryX  = direction > 0 ? -0.08 :  1.08;
     const landX   = direction > 0 ?  0.25 :  0.75;
 
+    // Fire door event when entering the restobar (section index 2)
+    const enteringRestobar = nextIndex === 2;
+    const doorSide = direction > 0 ? 'left' : 'right';
+
     const charPos = { x: charXRef.current };
 
     // Phase 1 — character walks off screen (no overlay yet)
@@ -115,6 +119,11 @@ const ParallaxWorld = ({ children }: Props) => {
             charPos.x = entryX;
             charXRef.current = entryX;
             setCharX(entryX);
+
+            // Fire restobar door event while screen is dark
+            if (enteringRestobar) {
+              window.dispatchEvent(new CustomEvent('restobarEnter', { detail: { direction: doorSide } }));
+            }
 
             // Phase 4 — fade back in
             setOverlay('out');
