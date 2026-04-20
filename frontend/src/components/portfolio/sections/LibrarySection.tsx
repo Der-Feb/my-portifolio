@@ -1,342 +1,433 @@
+import { Project, PROJECTS } from '@/__mock__/projects';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollTrigger);
 
-interface Project {
-  title: string;
-  subtitle: string;
-  tags: string[];
-  desc: string;
-  details: string;
-  link: string;
-  github: string;
-  color: string;
+// Split into shelves alternating between 6 and 7 books
+const shelves: Project[][] = [];
+let bookIndex = 0;
+let shelfSize = 6; // Start with 6
+while (bookIndex < PROJECTS.length) {
+  const shelf = PROJECTS.slice(bookIndex, bookIndex + shelfSize);
+  if (shelf.length > 0) {
+    shelves.push(shelf);
+  }
+  bookIndex += shelfSize;
+  shelfSize = shelfSize === 6 ? 7 : 6; // Alternate between 6 and 7
 }
 
-const PROJECTS: Project[] = [
-  {
-    title: 'E-Commerce Platform',
-    subtitle: 'Full-Stack Web App',
-    tags: ['React', 'Node.js', 'PostgreSQL', 'Stripe'],
-    desc: 'A modern e-commerce solution with real-time inventory and seamless checkout.',
-    details: `Built with a React frontend, Node.js/Express backend, and PostgreSQL database. Features include real-time inventory management, Stripe payment integration, JWT authentication, and an admin dashboard with analytics. Deployed on AWS with a CI/CD pipeline via GitHub Actions.`,
-    link: '#',
-    github: 'https://github.com/Derick-Feb/',
-    color: '#e87d2b',
-  },
-  {
-    title: 'Task Management App',
-    subtitle: 'Collaborative Tool',
-    tags: ['TypeScript', 'Next.js', 'Prisma', 'WebSocket'],
-    desc: 'Collaborative project management with real-time updates and team features.',
-    details: `Real-time collaborative task board built with Next.js App Router and Prisma ORM. Features WebSocket-powered live updates, drag-and-drop Kanban boards, team roles & permissions, and email notifications via Resend.`,
-    link: '#',
-    github: 'https://github.com/Derick-Feb/',
-    color: '#4a80e8',
-  },
-  {
-    title: 'Analytics Dashboard',
-    subtitle: 'Data Visualization',
-    tags: ['React', 'D3.js', 'Python', 'FastAPI'],
-    desc: 'Data visualization platform with interactive charts and customizable reporting.',
-    details: `Custom analytics dashboard with interactive D3.js charts, configurable date ranges, CSV/PDF exports, and a Python FastAPI backend that processes large datasets. Includes role-based access control and embeddable widgets.`,
-    link: '#',
-    github: 'https://github.com/Derick-Feb/',
-    color: '#2bc5b4',
-  },
-  {
-    title: 'Social Media App',
-    subtitle: 'Mobile Application',
-    tags: ['React Native', 'Firebase', 'Redux', 'Expo'],
-    desc: 'Feature-rich social platform with real-time messaging and content sharing.',
-    details: `Cross-platform mobile app built with React Native and Expo. Features real-time chat via Firebase Firestore, image/video uploads, story features, push notifications, and an algorithmic feed. Published on App Store and Play Store.`,
-    link: '#',
-    github: 'https://github.com/Derick-Feb/',
-    color: '#8a4ae8',
-  },
-];
+// Generate varied heights and widths for all books
+const generateHeights = (count: number) =>
+  Array.from({ length: count }, (_, i) => 138 + ((i % 5) * 12));
+const generateWidths = (count: number) =>
+  Array.from({ length: count }, (_, i) => 40 + ((i % 4) * 6));
 
-const BOOK_COLORS = ['#8b4513', '#2c5f8a', '#2a6b3a', '#6b2a6b'];
+const ALL_HEIGHTS = generateHeights(PROJECTS.length);
+const ALL_WIDTHS = generateWidths(PROJECTS.length);
 
-const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => void }) => {
-  const overlayRef = useRef<HTMLDivElement>(null);
+// ─── Modal ────────────────────────────────────────────────────────────────────
 
-  const handleBgClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) onClose();
-  };
-
-  return createPortal(
-    <div className="modal-overlay" ref={overlayRef} onClick={handleBgClick}>
+const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => void }) => (
+  createPortal(
+    <div
+      className="modal-overlay"
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div
         className="modal-content"
-        style={{ padding: '0', overflow: 'hidden' }}
+        style={{ maxWidth: 640, width: '100%', padding: 0, overflow: 'hidden', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
       >
-        {/* Modal Header */}
-        <div style={{ background: project.color, padding: '20px 24px 16px', position: 'relative' }}>
+        {/* ── Header ── */}
+        <div style={{ background: project.color, padding: '20px 24px 16px', position: 'relative', flexShrink: 0 }}>
           <button
             onClick={onClose}
             style={{
-              position: 'absolute',
-              top: 12, right: 12,
-              background: 'rgba(0,0,0,0.3)',
-              border: 'none',
-              color: 'white',
-              width: 24, height: 24,
-              borderRadius: '50%',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              position: 'absolute', top: 12, right: 12,
+              background: 'rgba(0,0,0,0.35)', border: 'none', color: '#fff',
+              width: 28, height: 28, borderRadius: '50%', cursor: 'pointer',
+              fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-          >
-            ×
-          </button>
-          <span style={{ fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)' }}>
+          >×</button>
+          <span style={{ fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', display: 'block', marginBottom: 4 }}>
             {project.subtitle}
           </span>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: 'white', marginTop: 2 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.9rem', color: '#fff', margin: 0, letterSpacing: '0.04em' }}>
             {project.title}
           </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {project.tags.map(t => (
-              <span key={t} style={{ padding: '3px 8px', background: 'rgba(0,0,0,0.3)', borderRadius: 2, fontSize: '0.6rem', color: 'rgba(255,255,255,0.85)', letterSpacing: '0.05em', fontFamily: 'var(--font-body)' }}>
-                {t}
-              </span>
-            ))}
-          </div>
         </div>
 
-        {/* Modal Body */}
-        <div style={{ padding: '20px 24px 24px', background: 'var(--bg-surface)' }}>
-          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 20, fontSize: '0.8rem' }}>
-            {project.details}
-          </p>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rim-glow-subtle"
-              style={{
-                padding: '8px 18px',
-                background: 'var(--naruto-orange)',
-                color: '#08090d',
-                textDecoration: 'none',
-                fontFamily: 'var(--font-display)',
-                fontSize: '0.85rem',
-                letterSpacing: '0.08em',
-                borderRadius: 2,
-                transition: 'transform 0.2s',
-              }}
-              onMouseOver={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-              onMouseOut={e => (e.currentTarget.style.transform = '')}
-            >
-              VIEW CODE
-            </a>
-            <a
-              href={project.link}
-              style={{
-                padding: '8px 18px',
-                border: '1px solid rgba(232,125,43,0.3)',
-                color: 'var(--text-primary)',
-                textDecoration: 'none',
-                fontFamily: 'var(--font-display)',
-                fontSize: '0.85rem',
-                letterSpacing: '0.08em',
-                borderRadius: 2,
-                transition: 'border-color 0.2s',
-              }}
-              onMouseOver={e => (e.currentTarget.style.borderColor = 'var(--naruto-orange)')}
-              onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(232,125,43,0.3)')}
-            >
-              LIVE DEMO
-            </a>
+        {/* ── Scrollable body ── */}
+        <div style={{ overflowY: 'auto', background: 'var(--bg-surface)', flex: 1 }}>
+
+          {/* Preview image */}
+          <div style={{ width: '100%', height: 180, overflow: 'hidden', position: 'relative' }}>
+            <img
+              src={project.previewImage}
+              alt={`${project.title} preview`}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              loading="lazy"
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, var(--bg-surface) 100%)' }} />
+          </div>
+
+          <div style={{ padding: '0 24px 24px' }}>
+
+            {/* Description */}
+            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75, fontSize: '0.8rem', margin: '16px 0' }}>
+              {project.description}
+            </p>
+
+            {/* Tech stack */}
+            <div style={{ marginBottom: 20 }}>
+              <span style={{ fontSize: '0.5rem', letterSpacing: '0.25em', color: project.color, textTransform: 'uppercase', display: 'block', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
+                TECH STACK
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {project.techStack.map(t => (
+                  <span key={t} style={{
+                    padding: '4px 10px',
+                    background: 'var(--bg-elevated)',
+                    border: `1px solid ${project.color}44`,
+                    borderRadius: 3,
+                    fontSize: '0.65rem',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'var(--font-body)',
+                    letterSpacing: '0.05em',
+                  }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Links */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
+              <a
+                href={project.codeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '8px 20px',
+                  background: project.color,
+                  color: '#08090d',
+                  textDecoration: 'none',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.1em',
+                  borderRadius: 3,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                ⌥ VIEW CODE
+              </a>
+              {project.liveUrl && project.liveUrl !== '#' && (
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '8px 20px',
+                    border: `1px solid ${project.color}66`,
+                    color: 'var(--text-primary)',
+                    textDecoration: 'none',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.85rem',
+                    letterSpacing: '0.1em',
+                    borderRadius: 3,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
+                >
+                  ↗ LIVE DEMO
+                </a>
+              )}
+            </div>
+
+            {/* Teammates */}
+            {project.teammates && project.teammates.length > 0 && (
+              <div>
+                <span style={{ fontSize: '0.5rem', letterSpacing: '0.25em', color: project.color, textTransform: 'uppercase', display: 'block', marginBottom: 10, fontFamily: 'var(--font-body)' }}>
+                  TEAMMATES
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {project.teammates.map(tm => (
+                    <div key={tm.name} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      background: 'var(--bg-elevated)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: 4,
+                    }}>
+                      <div>
+                        <span style={{ display: 'block', color: 'var(--text-primary)', fontSize: '0.75rem', fontWeight: 600 }}>{tm.name}</span>
+                        <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{tm.role}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {tm.links.map(lk => (
+                          <a
+                            key={lk.label}
+                            href={lk.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: '4px 10px',
+                              border: `1px solid ${project.color}55`,
+                              color: project.color,
+                              textDecoration: 'none',
+                              fontSize: '0.6rem',
+                              borderRadius: 2,
+                              fontFamily: 'var(--font-body)',
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {lk.label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>,
-    document.body
-  );
-};
+    document.body,
+  )
+);
+
+// ─── Book component ───────────────────────────────────────────────────────────
+
+const Book = ({
+  project, height, width, onClick,
+}: {
+  project: Project; height: number; width: number; onClick: () => void;
+}) => (
+  <div
+    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative' }}
+    onClick={onClick}
+    title={project.title}
+  >
+    <div
+      className="book-spine"
+      style={{
+        width,
+        height,
+        background: `linear-gradient(to right, ${project.spineColor} 0%, ${project.spineColor}dd 40%, ${project.spineColor}99 100%)`,
+        borderRadius: '2px 5px 5px 2px',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '10px 6px',
+        writingMode: 'vertical-rl',
+        boxShadow: `2px 0 8px rgba(0,0,0,0.5), inset -2px 0 6px rgba(0,0,0,0.3)`,
+      }}
+    >
+      {/* Pages edge */}
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: 7,
+        background: 'linear-gradient(to right, rgba(255,255,255,0.18), rgba(255,255,255,0.06))',
+        borderRight: '1px solid rgba(255,255,255,0.12)',
+      }} />
+      {/* Color accent strip */}
+      <div style={{
+        position: 'absolute', right: 0, top: 0, bottom: 0, width: 4,
+        background: project.color,
+        opacity: 0.7,
+      }} />
+      {/* Title only */}
+      <span style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: '0.72rem',
+        letterSpacing: '0.12em',
+        color: 'rgba(255,255,255,0.92)',
+        transform: 'rotate(180deg)',
+        textTransform: 'uppercase',
+        lineHeight: 1.1,
+      }}>
+        {project.title}
+      </span>
+    </div>
+    {/* Shelf plank under each book */}
+    <div style={{
+      width: '115%', height: 7,
+      background: 'linear-gradient(to bottom, #4a3020, #2a1808)',
+      borderRadius: 1,
+      boxShadow: '0 4px 14px rgba(0,0,0,0.6)',
+    }} />
+  </div>
+);
+
+// ─── Shelf row ────────────────────────────────────────────────────────────────
+
+const Shelf = ({
+  projects, startIndex, onSelect,
+}: {
+  projects: Project[]; startIndex: number; onSelect: (p: Project) => void;
+}) => (
+  <div style={{ marginBottom: 28, position: 'relative' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, overflow: 'visible' }}>
+      {projects.map((p, i) => {
+        const globalIndex = startIndex + i;
+        return (
+          <Book
+            key={`${globalIndex}-${p.title}`}
+            project={p}
+            height={ALL_HEIGHTS[globalIndex]}
+            width={ALL_WIDTHS[globalIndex]}
+            onClick={() => onSelect(p)}
+          />
+        );
+      })}
+    </div>
+  </div>
+);
+
+// ─── Section ──────────────────────────────────────────────────────────────────
 
 const LibrarySection = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState<Project | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const shelvesContainerRef = useRef<HTMLDivElement>(null);
 
-  // shelf heights for staggered appearance
-  const rows = [0, 1, 2, 3];
+  // Auto-scroll effect
+  useEffect(() => {
+    const container = shelvesContainerRef.current;
+    if (!container) return;
+
+    // Only auto-scroll if not hovering and no modal is open
+    if (isHovering || selected) return;
+
+    const interval = setInterval(() => {
+      if (container.scrollTop + container.clientHeight >= container.scrollHeight - 20) {
+        // Reached bottom, scroll back to top for infinite loop
+        container.scrollTop = 0;
+      } else {
+        // Scroll down by one full shelf height (more noticeable)
+        container.scrollBy({ top: 200, behavior: 'smooth' });
+      }
+    }, 2500); // Scroll every 2.5 seconds
+
+    return () => clearInterval(interval);
+  }, [isHovering, selected]);
 
   return (
     <section
       id="library"
       className="section-room"
-      ref={sectionRef}
       style={{
-        background: 'linear-gradient(180deg, #0a0c16 0%, #0d1020 50%, #08090d 100%)',
+        background: 'linear-gradient(180deg, #0a0b14 0%, #0d0f1e 60%, #08090d 100%)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         overflow: 'hidden',
-        padding: '80px 6vw 40px',
+        padding: '72px 5vw 32px',
       }}
     >
-      {/* Sky layer */}
-      <div className="parallax-layer layer-sky" data-parallax="0.15"
-        style={{ background: 'radial-gradient(ellipse at 70% 30%, #1a1830 0%, #08090d 70%)' }} />
+      {/* ── Background layers ── */}
+      <div className="parallax-layer" data-parallax="0.12"
+        style={{ background: 'radial-gradient(ellipse at 60% 30%, #1a1830 0%, #08090d 70%)' }} />
 
-      {/* Tall background bookcase structure */}
-      <div className="parallax-layer layer-far" data-parallax="0.2"
-        style={{ bottom: 0, top: 0, opacity: 0.4, display: 'flex', alignItems: 'stretch', gap: 4, padding: '0 2vw' }}>
-        {Array.from({ length: 20 }, (_, i) => (
+      {/* Bookcase wall columns */}
+      <div className="parallax-layer" data-parallax="0.2"
+        style={{ opacity: 0.35, display: 'flex', alignItems: 'stretch', gap: 3, padding: '0 1vw' }}>
+        {Array.from({ length: 24 }, (_, i) => (
           <div key={i} style={{
             flex: 1,
-            background: `rgba(${20 + i % 5 * 3}, ${18 + i % 3 * 2}, ${30 + i % 4 * 2}, 0.8)`,
-            borderRight: '1px solid rgba(50,45,70,0.3)',
+            background: `rgba(${18 + i % 4 * 3},${15 + i % 3 * 2},${28 + i % 5 * 2},0.9)`,
+            borderRight: '1px solid rgba(50,40,70,0.25)',
           }} />
         ))}
       </div>
 
-      {/* Mid shelves */}
-      <div className="parallax-layer layer-mid" data-parallax="0.4"
-        style={{ bottom: 0, top: 0, opacity: 0.6, pointerEvents: 'none' }}>
-        {[20, 40, 60, 80].map((pct, i) => (
+      {/* Horizontal shelf lines in background */}
+      <div className="parallax-layer" data-parallax="0.35" style={{ pointerEvents: 'none', opacity: 0.5 }}>
+        {[22, 44, 66, 88].map((pct, i) => (
           <div key={i} style={{
-            position: 'absolute',
-            top: `${pct}%`,
-            left: 0, right: 0,
-            height: '2px',
-            background: 'linear-gradient(to right, transparent, rgba(60,50,80,0.6) 10%, rgba(60,50,80,0.6) 90%, transparent)',
+            position: 'absolute', top: `${pct}%`, left: 0, right: 0, height: 3,
+            background: 'linear-gradient(to right, transparent, rgba(80,55,30,0.7) 10%, rgba(80,55,30,0.7) 90%, transparent)',
           }} />
         ))}
       </div>
 
-      {/* Vignette */}
       <div className="fog-vignette" style={{ zIndex: 8 }} />
 
-      {/* Main content */}
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: 800, width: '100%', margin: '0 auto' }}>
-        <span className="section-eyebrow" style={{ fontSize: '0.55rem', letterSpacing: '0.3em' }}>THE LIBRARY</span>
-        <h2 className="section-title" style={{ marginBottom: '1.5rem', fontSize: 'clamp(2rem, 5vw, 4.5rem)' }}>
-          ARCHIVED<br />
-          <span style={{ color: 'var(--naruto-orange)' }}>PROJECTS</span>
-        </h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.75rem' }}>
-          Each volume holds a case study. Select a book to open it.
-        </p>
+      {/* ── Main content ── */}
+      <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100%', display: 'flex', padding: '0 5vw', overflow: 'visible' }}>
 
-        {/* Bookshelf grid */}
-        <div style={{ display: 'flex', gap: '2vw', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          {PROJECTS.map((project, i) => (
-            <div
-              key={project.title}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}
-              onClick={() => setSelectedProject(project)}
-            >
-              {/* Book spine */}
-              <div
-                className="book-spine rim-glow-subtle"
-                style={{
-                  width: 45 + i * 8,
-                  height: 140 + (i % 3) * 30,
-                  background: `linear-gradient(to right, ${BOOK_COLORS[i]} 0%, ${BOOK_COLORS[i]}cc 30%, ${BOOK_COLORS[i]}aa 100%)`,
-                  borderRadius: '1px 4px 4px 1px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  padding: 8,
-                  writingMode: 'vertical-rl',
-                  textOrientation: 'mixed',
-                }}
-              >
-                {/* Spine pages effect */}
-                <div style={{
-                  position: 'absolute',
-                  left: 0, top: 0, bottom: 0,
-                  width: 6,
-                  background: 'rgba(255,255,255,0.15)',
-                  borderRight: '1px solid rgba(255,255,255,0.1)',
-                }} />
-                {/* Title text on spine */}
-                <span style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '0.7rem',
-                  letterSpacing: '0.15em',
-                  color: 'rgba(255,255,255,0.9)',
-                  transform: 'rotate(180deg)',
-                  textTransform: 'uppercase',
-                }}>
-                  {project.title}
-                </span>
-                {/* Volume tag */}
-                <div style={{
-                  position: 'absolute',
-                  top: 12, right: 6,
-                  background: 'rgba(0,0,0,0.4)',
-                  padding: '2px 4px',
-                  transform: 'rotate(180deg)',
-                  fontSize: '0.55rem',
-                  color: 'rgba(255,255,255,0.6)',
-                  letterSpacing: '0.1em',
-                }}>
-                  VOL.{String(i + 1).padStart(2, '0')}
-                </div>
-              </div>
-              {/* Shelf plank below each book */}
-              <div style={{
-                width: '120%',
-                height: 8,
-                background: 'linear-gradient(to bottom, #3a2a1a, #2a1a0a)',
-                borderRadius: 1,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              }} />
-            </div>
-          ))}
-
-          {/* Decorative filler books */}
-          {[50, 40, 65, 35, 55].map((h, i) => (
-            <div key={`filler-${i}`} style={{
-              width: 20 + i * 5,
-              height: h + 100,
-              background: `rgba(${30 + i * 8}, ${25 + i * 5}, ${45 + i * 6}, 0.8)`,
-              borderRadius: '2px 4px 4px 2px',
-              alignSelf: 'flex-end',
-              opacity: 0.6,
-            }} />
-          ))}
+        {/* Left: Description */}
+        <div style={{ flex: '0 0 340px', paddingTop: '10vh' }}>
+          <span style={{
+            fontSize: '0.5rem', letterSpacing: '0.35em', textTransform: 'uppercase',
+            color: 'var(--naruto-orange)', fontFamily: 'var(--font-body)', display: 'block', marginBottom: 6,
+          }}>
+            THE LIBRARY
+          </span>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(2rem, 4vw, 3.8rem)',
+            lineHeight: 0.9,
+            color: 'var(--text-primary)',
+            textTransform: 'uppercase',
+            margin: 0,
+          }}>
+            ARCHIVED<br />
+            <span style={{ color: 'var(--naruto-orange)' }}>PROJECTS</span>
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', marginTop: 14, lineHeight: 1.6 }}>
+            Each book on the shelves represents a project. Click on any book to open its case study and explore the details.
+          </p>
+          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-dim)' }}>
+            <div style={{ width: 32, height: 1, background: 'currentColor', opacity: 0.4 }} />
+            <span style={{ fontSize: '0.55rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              CLICK TO OPEN
+            </span>
+          </div>
         </div>
 
-        {/* Floating instruction */}
-        <div style={{
-          marginTop: '2rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          color: 'var(--text-dim)',
-        }}>
-          <span style={{ fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-            ↑ SELECT A VOLUME TO OPEN
-          </span>
+        {/* Spacer — pushes shelves to the right */}
+        <div style={{ flex: 1 }} />
+
+        {/* Right: Shelves — aligned to right edge */}
+        <div
+          ref={shelvesContainerRef}
+          style={{
+            flex: '0 0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            paddingRight: '2vw',
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            overflowX: 'visible',
+            scrollBehavior: 'smooth',
+          }}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          {shelves.map((shelf, shelfIndex) => (
+            <Shelf
+              key={`shelf-${shelfIndex}`}
+              projects={shelf}
+              startIndex={shelves.slice(0, shelfIndex).reduce((sum, s) => sum + s.length, 0)}
+              onSelect={setSelected}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Floor */}
+      {/* Floor fade */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: 80,
-        background: 'linear-gradient(to top, #08090d 0%, transparent 100%)',
-        zIndex: 6,
+        position: 'absolute', bottom: 0, left: 0, right: 0, height: 70,
+        background: 'linear-gradient(to top, #08090d, transparent)',
+        zIndex: 9, pointerEvents: 'none',
       }} />
 
-      {selectedProject && (
-        <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
-      )}
+      {selected && <ProjectModal project={selected} onClose={() => setSelected(null)} />}
     </section>
   );
 };
