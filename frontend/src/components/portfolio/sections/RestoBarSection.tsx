@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 // SVG viewBox: 0 0 1200 400  — scene div: bottom:60px, height:58%
 // Ground line y=397 → aligns with Naruto's feet (bottom:60px)
 // Counter top surface: y=236
-// Stool seat (patron side): y=270
-// NPC head cy=218 (r=9), torso y=227–248, legs y=248–298
-// Stool base: y=376
+// Stool seat (patron side): y=275
+// NPC head cy=223 (r=9), torso y=232–255, legs y=255–295
+// Stool base: y=397
 // ─────────────────────────────────────────────────────────────────────────────
 
 // NPC x positions in SVG space (6 NPCs spread across 1200)
@@ -31,28 +31,54 @@ const RestoBarSection = () => {
   const speakDuration = (idx: number) =>
     Math.min(8000, Math.max(4000, TESTIMONIALS[idx].comment.length * 28));
 
+  // Pause-on-hover state — use ref to avoid stale closure in timers
+  const pausedRef  = useRef(false);
+  const speakRef   = useRef<(idx: number) => void>(() => {});
+
   // Measure where the active NPC head is in screen space
   const measureNPC = (idx: number) => {
     const svg = svgRef.current;
-    if (!svg) return;
-    const vb = svg.viewBox.baseVal;          // 0 0 1200 520
+    if (!svg || !sectionRef.current) return;
+    const vb = svg.viewBox.baseVal;
     const rect = svg.getBoundingClientRect();
-    const scaleX = rect.width  / vb.width;
-    const scaleY = rect.height / vb.height;
-    // NPC head top in SVG: x = npcSvgX(idx), y = 218  (seatY=270, head cy=270-52=218, r=9 → top=209)
-    const screenX = rect.left + npcSvgX(idx) * scaleX;
-    const screenY = rect.top  + 209          * scaleY;
-    // Convert to position relative to the section
-    const sec = sectionRef.current!.getBoundingClientRect();
+
+    // Correct math for preserveAspectRatio="xMidYMax meet"
+    const scale   = Math.min(rect.width / vb.width, rect.height / vb.height);
+    const offsetX = (rect.width  - vb.width  * scale) / 2;
+    const offsetY =  rect.height - vb.height * scale;      // yMax alignment
+
+    // seatY=275, head cy=223, top of head ≈ 214 → target y=211 (3px gap)
+    const screenX = rect.left + offsetX + npcSvgX(idx) * scale;
+    const screenY = rect.top  + offsetY + 211           * scale;
+
+    const sec = sectionRef.current.getBoundingClientRect();
     setTooltipX(screenX - sec.left);
     setTooltipY(screenY - sec.top);
+  };
+
+  const handleNPCEnter = () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    pausedRef.current = true;
+    setPhase('hold'); // keep tooltip fully visible while hovering
+  };
+
+  const handleNPCLeave = (idx: number) => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    timerRef.current = setTimeout(() => {
+      setPhase('out');
+      timerRef.current = setTimeout(() => {
+        speakRef.current((idx + 1) % NPC_COUNT);
+      }, 400);
+    }, 800);
   };
 
   useEffect(() => {
     const speak = (idx: number) => {
       setActiveIdx(idx);
       setPhase('in');
-      measureNPC(idx);
+      // rAF ensures the SVG is rendered at its new scroll position before measuring
+      requestAnimationFrame(() => measureNPC(idx));
 
       timerRef.current = setTimeout(() => {
         setPhase('hold');
@@ -65,6 +91,7 @@ const RestoBarSection = () => {
       }, 400);
     };
 
+    speakRef.current = speak;
     timerRef.current = setTimeout(() => speak(0), 800);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,8 +198,8 @@ const RestoBarSection = () => {
       <div style={{
         position: 'absolute',
         left: 0, right: 0,
-        bottom: 60,
-        height: '58%',
+        bottom: 240, // High enough that Naruto walks clearly below it
+        height: '52%',
         zIndex: 10,
         pointerEvents: 'none',
       }}>
@@ -279,11 +306,11 @@ const RestoBarSection = () => {
             </g>
           ))}
 
-          {/* ── COUNTER TOP y=240 ── */}
+          {/* ── COUNTER TOP ── */}
           <rect x="0" y="238" width="1200" height="14" fill="url(#bbCounter)" />
           <rect x="0" y="236" width="1200" height="4" rx="1" fill="#5a4020" stroke="rgba(200,160,60,0.4)" strokeWidth="1" />
           <rect x="0" y="236" width="1200" height="2" fill="rgba(200,160,60,0.22)" />
-          <rect x="0" y="252" width="1200" height="10" fill="#2a1a08" />
+          <rect x="0" y="252" width="1200" height="10" fill="#1a1006" />
 
           {/* Glasses on counter */}
           {[150,300,500,700,900,1050].map((gx, gi) => {
@@ -298,9 +325,9 @@ const RestoBarSection = () => {
             );
             if (gt === 'wine') return (
               <g key={gi}>
-                <path d={`M${gx-5},230 Q${gx-5},236 ${gx},238 Q${gx+5},236 ${gx+5},230 Z`} fill="rgba(180,220,255,0.13)" stroke="rgba(180,220,255,0.38)" strokeWidth="0.8" />
-                <line x1={gx} y1="238" x2={gx} y2="241" stroke="rgba(180,220,255,0.4)" strokeWidth="1.2" />
-                <ellipse cx={gx} cy="242" rx="4" ry="1.5" fill="rgba(180,220,255,0.18)" stroke="rgba(180,220,255,0.35)" strokeWidth="0.8" />
+                <path d={`M${gx-5},224 Q${gx-5},230 ${gx},232 Q${gx+5},230 ${gx+5},224 Z`} fill="rgba(180,220,255,0.13)" stroke="rgba(180,220,255,0.38)" strokeWidth="0.8" />
+                <line x1={gx} y1="232" x2={gx} y2="235" stroke="rgba(180,220,255,0.4)" strokeWidth="1.2" />
+                <ellipse cx={gx} cy="236" rx="4" ry="1.5" fill="rgba(180,220,255,0.18)" stroke="rgba(180,220,255,0.35)" strokeWidth="0.8" />
               </g>
             );
             return (
@@ -312,59 +339,86 @@ const RestoBarSection = () => {
           })}
 
           {/* ── STOOLS + SEATED NPCs ──────────────────────────────────────────
-              viewBox 0 0 1200 400. Counter y=240. Stool seat y=270.
-              NPC head y=218, total height ~55 units (matches Naruto scale).
+              seatY=275. Shorter stools for better scale.
           ── */}
           {TESTIMONIALS.map((t, i) => {
-            const cx   = npcSvgX(i);
-            const seatY = 270;
+            const cx      = npcSvgX(i);
+            const seatY   = 275;
+            const hipY    = seatY - 20; 
+            const kneeY   = hipY  + 10; 
+            const footY   = seatY + 18; 
+            const groundY = seatY + 80; // Ground line for stool
             const isActive = activeIdx === i;
             return (
               <g key={i}>
-                {/* Stool seat */}
-                <ellipse cx={cx} cy={seatY}   rx="14" ry="5"  fill="#3a2a1a" stroke="#5a3a20" strokeWidth="1.2" />
-                <ellipse cx={cx} cy={seatY-1} rx="12" ry="3.5" fill="#4a3020" />
-                {/* Pole */}
-                <line x1={cx} y1={seatY+5} x2={cx} y2={seatY+90}
-                  stroke="#6a5a4a" strokeWidth="3.5" strokeLinecap="round" />
-                {/* Foot ring */}
-                <ellipse cx={cx} cy={seatY+60} rx="10" ry="3.5"
-                  fill="none" stroke="#7a6a5a" strokeWidth="2" />
-                {/* Legs */}
-                <line x1={cx-3}  y1={seatY+86} x2={cx-16} y2={seatY+104} stroke="#5a4a3a" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1={cx+3}  y1={seatY+86} x2={cx+16} y2={seatY+104} stroke="#5a4a3a" strokeWidth="2.5" strokeLinecap="round" />
-                <ellipse cx={cx-16} cy={seatY+106} rx="4" ry="2" fill="#3a2a1a" />
-                <ellipse cx={cx+16} cy={seatY+106} rx="4" ry="2" fill="#3a2a1a" />
+                {/* ── Compact bar stool ── */}
+                <ellipse cx={cx} cy={seatY}   rx="8" ry="3" fill="#3a2a1a" stroke="#5a3a20" strokeWidth="1" />
+                <ellipse cx={cx} cy={seatY-1} rx="7" ry="2" fill="#4a3020" />
+                {/* Shorter Pole */}
+                <line x1={cx} y1={seatY+3} x2={cx} y2={groundY - 12}
+                  stroke="#6a5a4a" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Foot rest ring */}
+                <ellipse cx={cx} cy={seatY+30} rx="7" ry="2.2"
+                  fill="none" stroke="#7a6a5a" strokeWidth="1.5" />
+                {/* Four legs splayed at base, touching groundY */}
+                <line x1={cx-1} y1={groundY - 12} x2={cx-6} y2={groundY} stroke="#5a4a3a" strokeWidth="2" strokeLinecap="round" />
+                <line x1={cx+1} y1={groundY - 12} x2={cx+6} y2={groundY} stroke="#5a4a3a" strokeWidth="2" strokeLinecap="round" />
+                <ellipse cx={cx-6} cy={groundY} rx="3" ry="1.2" fill="#3a2a1a" />
+                <ellipse cx={cx+6} cy={groundY} rx="3" ry="1.2" fill="#3a2a1a" />
 
-                {/* Seated NPC — ~55 units tall, matches Naruto scale */}
-                <g style={{ opacity: isActive ? 1 : 0.38, transition: 'opacity 0.5s' }}>
+                {/* ── Seated NPC ── */}
+                <g
+                  style={{
+                    opacity: isActive ? 1 : 0.38,
+                    transition: 'opacity 0.5s',
+                    pointerEvents: isActive ? 'auto' : 'none',
+                    cursor: isActive ? 'pointer' : 'default',
+                  }}
+                  onMouseEnter={isActive ? handleNPCEnter : undefined}
+                  onMouseLeave={isActive ? () => handleNPCLeave(i) : undefined}
+                  onFocus={isActive ? handleNPCEnter : undefined}
+                  onBlur={isActive ? () => handleNPCLeave(i) : undefined}
+                  tabIndex={isActive ? 0 : -1}
+                  role="button"
+                  aria-label={`Listen to ${t.name}`}
+                >
                   {isActive && (
-                    <circle cx={cx} cy={seatY-20} r="28"
+                    <circle cx={cx} cy={seatY-26} r="30"
                       fill="none" stroke={t.silhouetteColor} strokeWidth="1" opacity="0.2" />
                   )}
+
                   {/* Head */}
                   <circle cx={cx} cy={seatY-52} r="9" fill={t.silhouetteColor} />
-                  {/* Torso */}
-                  <path d={`M${cx-9},${seatY-43} Q${cx},${seatY-46} ${cx+9},${seatY-43} L${cx+7},${seatY-22} Q${cx},${seatY-19} ${cx-7},${seatY-22} Z`}
+
+                  {/* Torso — from shoulders down to hip/counter level */}
+                  <path d={`M${cx-9},${seatY-43} Q${cx},${seatY-46} ${cx+9},${seatY-43} L${cx+7},${hipY} Q${cx},${hipY+3} ${cx-7},${hipY} Z`}
                     fill={t.silhouetteColor} />
-                  {/* Right arm + drink */}
-                  <path d={`M${cx+7},${seatY-34} Q${cx+17},${seatY-28} ${cx+20},${seatY-20}`}
+
+                  {/* Right arm + drink on counter (y=236) */}
+                  <path d={`M${cx+7},${seatY-36} Q${cx+16},${seatY-35} ${cx+19},236`}
                     stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
-                  <rect x={cx+17} y={seatY-25} width="6" height="9" rx="1.5" fill="rgba(255,200,80,0.9)" />
-                  <rect x={cx+17} y={seatY-25} width="6" height="3.5" rx="1" fill="rgba(255,230,130,1)" />
-                  {/* Left arm */}
-                  <path d={`M${cx-7},${seatY-34} Q${cx-17},${seatY-28} ${cx-19},${seatY-20}`}
+                  <rect x={cx+16} y="227" width="6" height="9" rx="1.5" fill="rgba(255,200,80,0.9)" />
+                  <rect x={cx+16} y="227" width="6" height="3.5" rx="1" fill="rgba(255,230,130,1)" />
+
+                  {/* Left arm resting on counter */}
+                  <path d={`M${cx-7},${seatY-36} Q${cx-16},${seatY-35} ${cx-19},236`}
                     stroke={t.silhouetteColor} strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                  {/* Upper legs */}
-                  <path d={`M${cx-5},${seatY-22} Q${cx-7},${seatY-8} ${cx-8},${seatY+2}`}
-                    stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
-                  <path d={`M${cx+5},${seatY-22} Q${cx+7},${seatY-8} ${cx+8},${seatY+2}`}
-                    stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" fill="none" />
-                  {/* Lower legs dangling */}
-                  <path d={`M${cx-8},${seatY+2} Q${cx-11},${seatY+16} ${cx-10},${seatY+28}`}
-                    stroke={t.silhouetteColor} strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                  <path d={`M${cx+8},${seatY+2} Q${cx+11},${seatY+16} ${cx+10},${seatY+28}`}
-                    stroke={t.silhouetteColor} strokeWidth="4.5" strokeLinecap="round" fill="none" />
+
+                  {/* ── Compact seated pose ── */}
+                  <line x1={cx-5} y1={hipY} x2={cx-14} y2={kneeY}
+                    stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" />
+                  <line x1={cx+5} y1={hipY} x2={cx+14} y2={kneeY}
+                    stroke={t.silhouetteColor} strokeWidth="5" strokeLinecap="round" />
+
+                  {/* Shins hanging down */}
+                  <line x1={cx-14} y1={kneeY} x2={cx-13} y2={footY}
+                    stroke={t.silhouetteColor} strokeWidth="4" strokeLinecap="round" />
+                  <line x1={cx+14} y1={kneeY} x2={cx+13} y2={footY}
+                    stroke={t.silhouetteColor} strokeWidth="4" strokeLinecap="round" />
+
+                  {/* Feet */}
+                  <ellipse cx={cx-13} cy={footY+1} rx="3" ry="1.5" fill={t.silhouetteColor} />
+                  <ellipse cx={cx+13} cy={footY+1} rx="3" ry="1.5" fill={t.silhouetteColor} />
                 </g>
               </g>
             );
@@ -384,14 +438,15 @@ const RestoBarSection = () => {
             style={{
               position: 'absolute',
               left: tooltipX,
-              top:  tooltipY - 8,   // 8px gap above NPC head
-              transform: 'translate(-50%, -100%)',
+              top:  tooltipY - 12,
+              transform: isVisible
+                ? 'translate(-50%, -100%) translateY(0px)'
+                : 'translate(-50%, -100%) translateY(10px)',
               zIndex: 20,
               width: 'clamp(170px, 19vw, 230px)',
               pointerEvents: 'none',
               opacity: isVisible ? 1 : 0,
-              translate: isVisible ? '0 0' : '0 10px',
-              transition: 'opacity 0.4s ease, translate 0.4s ease',
+              transition: 'opacity 0.4s ease, transform 0.4s ease',
             }}
           >
             <div style={{
@@ -412,15 +467,53 @@ const RestoBarSection = () => {
               }}>
                 {t.comment}
               </p>
-              <div style={{ marginTop: 8, paddingTop: 6, borderTop: `1px solid ${t.silhouetteColor}33` }}>
-                <span style={{
-                  display: 'block', color: t.silhouetteColor,
-                  fontFamily: 'var(--font-display)', fontSize: '0.68rem', letterSpacing: '0.06em',
-                }}>{t.name}</span>
-                <span style={{
-                  fontSize: '0.52rem', color: 'var(--text-dim)',
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                }}>{t.role} · {t.company}</span>
+              <div style={{
+                marginTop: 8, paddingTop: 6,
+                borderTop: `1px solid ${t.silhouetteColor}33`,
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                {/* ── Round avatar with fallback ── */}
+                <div style={{
+                  width: 34, height: 34, borderRadius: '50%',
+                  flexShrink: 0, overflow: 'hidden',
+                  border: `2px solid ${t.silhouetteColor}99`,
+                  boxShadow: `0 0 8px ${t.silhouetteColor}44`,
+                  background: `${t.silhouetteColor}22`,
+                }}>
+                  {t.profileImage ? (
+                    <img
+                      src={t.profileImage}
+                      alt={t.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => {
+                        // On broken URL, hide img and show the fallback behind it
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    // SVG silhouette fallback
+                    <svg viewBox="0 0 34 34" width="34" height="34" style={{ display: 'block' }}>
+                      <circle cx="17" cy="13" r="7" fill={t.silhouetteColor} opacity="0.85" />
+                      <path d="M4 32 Q4 22 17 22 Q30 22 30 32" fill={t.silhouetteColor} opacity="0.85" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* ── Name + role ── */}
+                <div style={{ minWidth: 0 }}>
+                  <span style={{
+                    display: 'block', color: t.silhouetteColor,
+                    fontFamily: 'var(--font-display)', fontSize: '0.68rem',
+                    letterSpacing: '0.06em', whiteSpace: 'nowrap',
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>{t.name}</span>
+                  <span style={{
+                    fontSize: '0.52rem', color: 'var(--text-dim)',
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    display: 'block',
+                  }}>{t.role} · {t.company}</span>
+                </div>
               </div>
             </div>
             {/* Tail pointing down to NPC */}
