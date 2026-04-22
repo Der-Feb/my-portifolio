@@ -1,18 +1,13 @@
 import { TESTIMONIALS } from '@/__mock__/testimonials';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-// ─── Coordinate plan ──────────────────────────────────────────────────────────
-// SVG viewBox: 0 0 1200 400  — scene div: bottom:60px, height:58%
-// Ground line y=397 → aligns with Naruto's feet (bottom:60px)
-// Counter top surface: y=236
-// Stool seat (patron side): y=275
-// NPC head cy=223 (r=9), torso y=232–255, legs y=255–295
-// Stool base: y=397
-// ─────────────────────────────────────────────────────────────────────────────
+// Limit NPCs to 6 maximum to prevent overcrowding if there are many testimonials
+const displayTestimonials = TESTIMONIALS.slice(0, 6);
 
 // NPC x positions in SVG space (6 NPCs spread across 1200)
-const NPC_COUNT = TESTIMONIALS.length;
-const npcSvgX = (i: number) => 100 + i * (1000 / (NPC_COUNT - 1));
+const NPC_COUNT = displayTestimonials.length;
+const npcSvgX = (i: number) => NPC_COUNT > 1 ? 100 + i * (1000 / (NPC_COUNT - 1)) : 600;
 
 // ─── RestoBarSection ──────────────────────────────────────────────────────────
 const RestoBarSection = () => {
@@ -28,8 +23,11 @@ const RestoBarSection = () => {
   const [tooltipX, setTooltipX] = useState(0);
   const [tooltipY, setTooltipY] = useState(0);
 
+  // ── Modal state ──
+  const [selectedTestimonialIdx, setSelectedTestimonialIdx] = useState<number | null>(null);
+
   const speakDuration = (idx: number) =>
-    Math.min(8000, Math.max(4000, TESTIMONIALS[idx].comment.length * 28));
+    Math.min(8000, Math.max(4000, displayTestimonials[idx].comment.length * 28));
 
   // Pause-on-hover state — use ref to avoid stale closure in timers
   const pausedRef  = useRef(false);
@@ -341,7 +339,7 @@ const RestoBarSection = () => {
           {/* ── STOOLS + SEATED NPCs ──────────────────────────────────────────
               seatY=275. Shorter stools for better scale.
           ── */}
-          {TESTIMONIALS.map((t, i) => {
+          {displayTestimonials.map((t, i) => {
             const cx      = npcSvgX(i);
             const seatY   = 275;
             const hipY    = seatY - 20; 
@@ -371,16 +369,17 @@ const RestoBarSection = () => {
                   style={{
                     opacity: isActive ? 1 : 0.38,
                     transition: 'opacity 0.5s',
-                    pointerEvents: isActive ? 'auto' : 'none',
-                    cursor: isActive ? 'pointer' : 'default',
+                    pointerEvents: 'auto',
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={isActive ? handleNPCEnter : undefined}
                   onMouseLeave={isActive ? () => handleNPCLeave(i) : undefined}
                   onFocus={isActive ? handleNPCEnter : undefined}
                   onBlur={isActive ? () => handleNPCLeave(i) : undefined}
-                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => setSelectedTestimonialIdx(i)}
+                  tabIndex={0}
                   role="button"
-                  aria-label={`Listen to ${t.name}`}
+                  aria-label={`View details for ${t.name}`}
                 >
                   {isActive && (
                     <circle cx={cx} cy={seatY-26} r="30"
@@ -431,7 +430,7 @@ const RestoBarSection = () => {
 
       {/* ── SPEECH TOOLTIP — positioned via measured SVG coords ── */}
       {activeIdx >= 0 && (() => {
-        const t = TESTIMONIALS[activeIdx];
+        const t = displayTestimonials[activeIdx];
         return (
           <div
             key={activeIdx}
@@ -443,11 +442,17 @@ const RestoBarSection = () => {
                 ? 'translate(-50%, -100%) translateY(0px)'
                 : 'translate(-50%, -100%) translateY(10px)',
               zIndex: 20,
-              width: 'clamp(170px, 19vw, 230px)',
-              pointerEvents: 'none',
+              width: 'clamp(240px, 25vw, 320px)',
+              pointerEvents: isVisible ? 'auto' : 'none',
+              cursor: isVisible ? 'pointer' : 'default',
               opacity: isVisible ? 1 : 0,
               transition: 'opacity 0.4s ease, transform 0.4s ease',
             }}
+            onClick={() => {
+              if (isVisible) setSelectedTestimonialIdx(activeIdx);
+            }}
+            onMouseEnter={handleNPCEnter}
+            onMouseLeave={() => handleNPCLeave(activeIdx)}
           >
             <div style={{
               background: 'rgba(18,20,32,0.97)',
@@ -462,8 +467,8 @@ const RestoBarSection = () => {
                 display: 'block', marginBottom: 5, opacity: 0.75,
               }}>"</span>
               <p style={{
-                color: 'var(--text-primary)', fontSize: '0.58rem',
-                lineHeight: 1.55, fontStyle: 'italic', margin: 0,
+                color: 'var(--text-primary)', fontSize: '0.85rem',
+                lineHeight: 1.6, fontStyle: 'italic', margin: 0,
               }}>
                 {t.comment}
               </p>
@@ -503,12 +508,12 @@ const RestoBarSection = () => {
                 <div style={{ minWidth: 0 }}>
                   <span style={{
                     display: 'block', color: t.silhouetteColor,
-                    fontFamily: 'var(--font-display)', fontSize: '0.68rem',
+                    fontFamily: 'var(--font-display)', fontSize: '0.95rem',
                     letterSpacing: '0.06em', whiteSpace: 'nowrap',
                     overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>{t.name}</span>
                   <span style={{
-                    fontSize: '0.52rem', color: 'var(--text-dim)',
+                    fontSize: '0.75rem', color: 'var(--text-dim)',
                     letterSpacing: '0.08em', textTransform: 'uppercase',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     display: 'block',
@@ -528,6 +533,125 @@ const RestoBarSection = () => {
           </div>
         );
       })()}
+
+      {/* ── MODAL ── */}
+      {selectedTestimonialIdx !== null && typeof document !== 'undefined' && createPortal((() => {
+        const t = displayTestimonials[selectedTestimonialIdx];
+        return (
+          <div
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              background: 'rgba(5, 6, 10, 0.85)', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px',
+              animation: 'fadeIn 0.3s ease',
+            }}
+            onClick={() => setSelectedTestimonialIdx(null)}
+          >
+            <div
+              style={{
+                background: '#10121a',
+                border: `1px solid ${t.silhouetteColor}66`,
+                borderRadius: '16px',
+                padding: '30px',
+                maxWidth: '550px', width: '100%',
+                position: 'relative',
+                boxShadow: `0 20px 50px rgba(0,0,0,0.5), 0 0 40px ${t.silhouetteColor}22`,
+                transform: 'translateY(0)',
+                animation: 'slideUp 0.3s ease',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setSelectedTestimonialIdx(null)}
+                style={{
+                  position: 'absolute', top: '20px', right: '20px',
+                  background: 'transparent', border: 'none', color: 'var(--text-dim)',
+                  fontSize: '1.5rem', cursor: 'pointer', padding: '5px',
+                  lineHeight: 1, transition: 'color 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
+              >
+                &times;
+              </button>
+              
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '25px' }}>
+                <div style={{
+                  width: 70, height: 70, borderRadius: '50%',
+                  overflow: 'hidden', flexShrink: 0,
+                  border: `2px solid ${t.silhouetteColor}99`,
+                  boxShadow: `0 0 15px ${t.silhouetteColor}44`,
+                  background: `${t.silhouetteColor}22`,
+                }}>
+                  {t.profileImage ? (
+                    <img
+                      src={t.profileImage}
+                      alt={t.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <svg viewBox="0 0 34 34" width="70" height="70" style={{ display: 'block' }}>
+                      <circle cx="17" cy="13" r="7" fill={t.silhouetteColor} opacity="0.85" />
+                      <path d="M4 32 Q4 22 17 22 Q30 22 30 32" fill={t.silhouetteColor} opacity="0.85" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.6rem', color: t.silhouetteColor, fontFamily: 'var(--font-display)' }}>
+                    {t.name}
+                  </h3>
+                  <p style={{ margin: '4px 0 0', color: 'var(--text-dim)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {t.role} <span style={{ color: 'var(--text-primary)' }}>·</span> {t.company}
+                  </p>
+                  <p style={{ margin: '8px 0 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                    <span style={{ opacity: 0.6 }}>Project:</span> {t.projectWorkedOn}
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ position: 'relative', padding: '0 10px', marginBottom: '30px' }}>
+                <span style={{
+                  position: 'absolute', top: -20, left: -5,
+                  fontFamily: 'Georgia, serif', fontSize: '4rem',
+                  color: t.silhouetteColor, opacity: 0.15, lineHeight: 1
+                }}>"</span>
+                <p style={{
+                  fontSize: '1.05rem', lineHeight: 1.7, color: 'var(--text-primary)',
+                  fontStyle: 'italic', margin: 0, position: 'relative', zIndex: 1
+                }}>
+                  {t.comment}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {t.contactLinks.map((link, idx) => (
+                  <a key={idx} href={link.url} target="_blank" rel="noreferrer" style={{
+                    padding: '8px 16px', borderRadius: '6px',
+                    background: `${t.silhouetteColor}1a`,
+                    color: t.silhouetteColor,
+                    textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600,
+                    border: `1px solid ${t.silhouetteColor}40`,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = `${t.silhouetteColor}33`;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = `${t.silhouetteColor}1a`;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })(), document.body)}
 
     </section>
   );
