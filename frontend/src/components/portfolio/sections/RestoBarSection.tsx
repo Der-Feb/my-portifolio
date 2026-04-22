@@ -25,6 +25,10 @@ const RestoBarSection = () => {
 
   // ── Modal state ──
   const [selectedTestimonialIdx, setSelectedTestimonialIdx] = useState<number | null>(null);
+  const isModalOpenRef = useRef(false);
+
+  // ── Tooltip hover state ──
+  const [isTooltipHovered, setIsTooltipHovered] = useState(false);
 
   const speakDuration = (idx: number) =>
     Math.min(8000, Math.max(4000, displayTestimonials[idx].comment.length * 28));
@@ -61,12 +65,34 @@ const RestoBarSection = () => {
   };
 
   const handleNPCLeave = (idx: number) => {
+    if (isModalOpenRef.current) return; // keep locked if modal is open
     if (!pausedRef.current) return;
     pausedRef.current = false;
     timerRef.current = setTimeout(() => {
       setPhase('out');
       timerRef.current = setTimeout(() => {
         speakRef.current((idx + 1) % NPC_COUNT);
+      }, 400);
+    }, 800);
+  };
+
+  const handleOpenModal = (idx: number) => {
+    isModalOpenRef.current = true;
+    setSelectedTestimonialIdx(idx);
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  };
+
+  const handleCloseModal = () => {
+    isModalOpenRef.current = false;
+    setSelectedTestimonialIdx(null);
+    setIsTooltipHovered(false);
+    
+    // Resume cycle
+    pausedRef.current = false;
+    timerRef.current = setTimeout(() => {
+      setPhase('out');
+      timerRef.current = setTimeout(() => {
+        speakRef.current((activeIdx + 1) % NPC_COUNT);
       }, 400);
     }, 800);
   };
@@ -369,15 +395,18 @@ const RestoBarSection = () => {
                   style={{
                     opacity: isActive ? 1 : 0.38,
                     transition: 'opacity 0.5s',
-                    pointerEvents: 'auto',
-                    cursor: 'pointer',
+                    pointerEvents: isActive ? 'auto' : 'none',
+                    cursor: isActive ? 'pointer' : 'default',
+                    outline: 'none',
                   }}
                   onMouseEnter={isActive ? handleNPCEnter : undefined}
                   onMouseLeave={isActive ? () => handleNPCLeave(i) : undefined}
                   onFocus={isActive ? handleNPCEnter : undefined}
                   onBlur={isActive ? () => handleNPCLeave(i) : undefined}
-                  onClick={() => setSelectedTestimonialIdx(i)}
-                  tabIndex={0}
+                  onClick={() => {
+                    if (isActive) handleOpenModal(i);
+                  }}
+                  tabIndex={isActive ? 0 : -1}
                   role="button"
                   aria-label={`View details for ${t.name}`}
                 >
@@ -438,9 +467,10 @@ const RestoBarSection = () => {
               position: 'absolute',
               left: tooltipX,
               top:  tooltipY - 12,
+              transformOrigin: 'bottom center',
               transform: isVisible
-                ? 'translate(-50%, -100%) translateY(0px)'
-                : 'translate(-50%, -100%) translateY(10px)',
+                ? `translate(-50%, -100%) translateY(0px) ${isTooltipHovered ? 'scale(1.03)' : 'scale(1)'}`
+                : 'translate(-50%, -100%) translateY(10px) scale(0.95)',
               zIndex: 20,
               width: 'clamp(240px, 25vw, 320px)',
               pointerEvents: isVisible ? 'auto' : 'none',
@@ -449,10 +479,16 @@ const RestoBarSection = () => {
               transition: 'opacity 0.4s ease, transform 0.4s ease',
             }}
             onClick={() => {
-              if (isVisible) setSelectedTestimonialIdx(activeIdx);
+              if (isVisible) handleOpenModal(activeIdx);
             }}
-            onMouseEnter={handleNPCEnter}
-            onMouseLeave={() => handleNPCLeave(activeIdx)}
+            onMouseEnter={() => {
+              setIsTooltipHovered(true);
+              handleNPCEnter();
+            }}
+            onMouseLeave={() => {
+              setIsTooltipHovered(false);
+              handleNPCLeave(activeIdx);
+            }}
           >
             <div style={{
               background: 'rgba(18,20,32,0.97)',
@@ -546,7 +582,7 @@ const RestoBarSection = () => {
               padding: '20px',
               animation: 'fadeIn 0.3s ease',
             }}
-            onClick={() => setSelectedTestimonialIdx(null)}
+            onClick={handleCloseModal}
           >
             <div
               style={{
@@ -563,7 +599,7 @@ const RestoBarSection = () => {
               onClick={e => e.stopPropagation()}
             >
               <button 
-                onClick={() => setSelectedTestimonialIdx(null)}
+                onClick={handleCloseModal}
                 style={{
                   position: 'absolute', top: '20px', right: '20px',
                   background: 'transparent', border: 'none', color: 'var(--text-dim)',
