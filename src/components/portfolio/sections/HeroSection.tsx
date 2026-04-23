@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { useAvailability } from '@/hooks/useAvailability';
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
+
+  // Fetch availability status
+  const { data: availability, isLoading: availabilityLoading } = useAvailability();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -91,12 +95,78 @@ const HeroSection = () => {
           color: 'var(--text-secondary)',
           fontSize: 'clamp(0.7rem, 1.1vw, 0.9rem)',
           maxWidth: 400,
-          marginBottom: '2rem',
+          marginBottom: '1.5rem',
           lineHeight: 1.6,
           letterSpacing: '0.02em',
         }}>
           Designing immersive digital worlds and high-performance interactive narratives with the modular precision of a ninja.
         </p>
+
+        {/* Availability Status - Always show, even if backend is down */}
+        <div className="hero-sub" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          marginBottom: '2rem',
+          padding: '10px 16px',
+          background: 'rgba(232,125,43,0.05)',
+          border: '1px solid rgba(232,125,43,0.15)',
+          borderRadius: '4px',
+          width: 'fit-content',
+        }}>
+          {availabilityLoading ? (
+            <span style={{ 
+              color: 'var(--text-secondary)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}>
+              Loading...
+            </span>
+          ) : availability ? (
+            <>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: availability.availableForWork ? '#4ade80' : '#ef4444',
+                boxShadow: availability.availableForWork 
+                  ? '0 0 10px rgba(74, 222, 128, 0.7)' 
+                  : '0 0 10px rgba(239, 68, 68, 0.7)',
+                animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
+              }} />
+              <span style={{ 
+                color: availability.availableForWork ? '#4ade80' : '#ef4444',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}>
+                {availability.availableForWork ? 'Available' : 'Unavailable'}
+              </span>
+            </>
+          ) : (
+            <>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: 'var(--naruto-orange)',
+                boxShadow: '0 0 10px var(--naruto-glow)',
+              }} />
+              <span style={{ 
+                color: 'var(--naruto-orange)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}>
+                Not Available
+              </span>
+            </>
+          )}
+        </div>
 
         <div style={{ display: 'flex', gap: 16 }}>
           <button
