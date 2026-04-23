@@ -14,6 +14,8 @@ export const useAvailability = () => {
     queryFn: availabilityService.getStatus,
     refetchInterval: 30000, // Poll every 30 seconds
     refetchIntervalInBackground: true, // Continue polling even when tab is not focused
+    refetchOnWindowFocus: true, // Refetch when user comes back to the tab
+    refetchOnMount: true, // Refetch when component mounts
   });
 };
 
