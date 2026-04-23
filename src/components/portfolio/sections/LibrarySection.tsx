@@ -1,20 +1,8 @@
-import { Project, PROJECTS } from '@/__mock__/projects';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-
-
-// Split into shelves alternating between 6 and 7 books
-const shelves: Project[][] = [];
-let bookIndex = 0;
-let shelfSize = 6; // Start with 6
-while (bookIndex < PROJECTS.length) {
-  const shelf = PROJECTS.slice(bookIndex, bookIndex + shelfSize);
-  if (shelf.length > 0) {
-    shelves.push(shelf);
-  }
-  bookIndex += shelfSize;
-  shelfSize = shelfSize === 6 ? 7 : 6; // Alternate between 6 and 7
-}
+import { useProjects } from '@/hooks/useProjects';
+import type { Project } from '@/types/api';
+import { PROJECTS as MOCK_PROJECTS } from '@/__mock__/projects';
 
 // Generate varied heights and widths for all books
 const generateHeights = (count: number) =>
@@ -22,12 +10,9 @@ const generateHeights = (count: number) =>
 const generateWidths = (count: number) =>
   Array.from({ length: count }, (_, i) => 40 + ((i % 4) * 6));
 
-const ALL_HEIGHTS = generateHeights(PROJECTS.length);
-const ALL_WIDTHS = generateWidths(PROJECTS.length);
-
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
-const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => void }) => (
+const ProjectModal = ({ project, onClose }: { project: Project | any; onClose: () => void }) => (
   createPortal(
     <div
       className="modal-overlay"
@@ -83,7 +68,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
                 TECH STACK
               </span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {project.techStack.map(t => (
+                {project.techStack.map((t: string) => (
                   <span key={t} style={{
                     padding: '4px 10px',
                     background: 'var(--bg-elevated)',
@@ -142,15 +127,15 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
               )}
             </div>
 
-            {/* Teammates */}
-            {project.teammates && project.teammates.length > 0 && (
+            {/* Teammates - handle both API (partners) and mock (teammates) */}
+            {((project.partners && project.partners.length > 0) || (project.teammates && project.teammates.length > 0)) && (
               <div>
                 <span style={{ fontSize: '0.5rem', letterSpacing: '0.25em', color: project.color, textTransform: 'uppercase', display: 'block', marginBottom: 10, fontFamily: 'var(--font-body)' }}>
                   TEAMMATES
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {project.teammates.map(tm => (
-                    <div key={tm.name} style={{
+                  {(project.partners || project.teammates)?.map((tm: any) => (
+                    <div key={tm.id || tm.name} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '10px 14px',
                       background: 'var(--bg-elevated)',
@@ -162,7 +147,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
                         <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{tm.role}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        {tm.links.map(lk => (
+                        {tm.links.map((lk: any) => (
                           <a
                             key={lk.label}
                             href={lk.url}
@@ -202,7 +187,7 @@ const ProjectModal = ({ project, onClose }: { project: Project; onClose: () => v
 const Book = ({
   project, height, width, onClick,
 }: {
-  project: Project; height: number; width: number; onClick: () => void;
+  project: Project | any; height: number; width: number; onClick: () => void;
 }) => (
   <div
     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative' }}
@@ -264,9 +249,13 @@ const Book = ({
 // ─── Shelf row ────────────────────────────────────────────────────────────────
 
 const Shelf = ({
-  projects, startIndex, onSelect,
+  projects, startIndex, onSelect, heights, widths,
 }: {
-  projects: Project[]; startIndex: number; onSelect: (p: Project) => void;
+  projects: (Project | any)[]; 
+  startIndex: number; 
+  onSelect: (p: Project | any) => void;
+  heights: number[];
+  widths: number[];
 }) => (
   <div style={{ marginBottom: 28, position: 'relative' }}>
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, overflow: 'visible' }}>
@@ -276,8 +265,8 @@ const Shelf = ({
           <Book
             key={`${globalIndex}-${p.title}`}
             project={p}
-            height={ALL_HEIGHTS[globalIndex]}
-            width={ALL_WIDTHS[globalIndex]}
+            height={heights[globalIndex]}
+            width={widths[globalIndex]}
             onClick={() => onSelect(p)}
           />
         );
@@ -289,9 +278,50 @@ const Shelf = ({
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 const LibrarySection = () => {
-  const [selected, setSelected] = useState<Project | null>(null);
+  const [selected, setSelected] = useState<Project | any | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const shelvesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch projects from API
+  const { data: apiProjects, isLoading, error } = useProjects();
+
+  // Use API data if available, otherwise fallback to mock data
+  const projects = useMemo(() => {
+    if (apiProjects && apiProjects.length > 0) {
+      return apiProjects;
+    }
+    // Fallback to mock data if API fails or returns empty
+    if (error || !apiProjects) {
+      console.warn('Using mock data - API unavailable or returned no data');
+      return MOCK_PROJECTS;
+    }
+    return [];
+  }, [apiProjects, error]);
+
+  // Split into shelves alternating between 6 and 7 books
+  const { shelves, ALL_HEIGHTS, ALL_WIDTHS } = useMemo(() => {
+    if (!projects || projects.length === 0) {
+      return { shelves: [], ALL_HEIGHTS: [], ALL_WIDTHS: [] };
+    }
+
+    const shelves: (Project | any)[][] = [];
+    let bookIndex = 0;
+    let shelfSize = 6; // Start with 6
+    while (bookIndex < projects.length) {
+      const shelf = projects.slice(bookIndex, bookIndex + shelfSize);
+      if (shelf.length > 0) {
+        shelves.push(shelf);
+      }
+      bookIndex += shelfSize;
+      shelfSize = shelfSize === 6 ? 7 : 6; // Alternate between 6 and 7
+    }
+
+    return {
+      shelves,
+      ALL_HEIGHTS: generateHeights(projects.length),
+      ALL_WIDTHS: generateWidths(projects.length),
+    };
+  }, [projects]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -313,6 +343,54 @@ const LibrarySection = () => {
 
     return () => clearInterval(interval);
   }, [isHovering, selected]);
+
+  // Show loading state only briefly
+  if (isLoading && !projects.length) {
+    return (
+      <section
+        id="library"
+        className="section-room"
+        style={{
+          background: 'linear-gradient(180deg, #0a0b14 0%, #0d0f1e 60%, #08090d 100%)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+          padding: '72px 5vw 32px',
+        }}
+      >
+        <div style={{ color: 'var(--naruto-orange)', fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>
+          LOADING ARCHIVES...
+        </div>
+      </section>
+    );
+  }
+
+  // If we have no projects at all (shouldn't happen with fallback)
+  if (!projects || projects.length === 0) {
+    return (
+      <section
+        id="library"
+        className="section-room"
+        style={{
+          background: 'linear-gradient(180deg, #0a0b14 0%, #0d0f1e 60%, #08090d 100%)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflow: 'hidden',
+          padding: '72px 5vw 32px',
+        }}
+      >
+        <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontFamily: 'var(--font-body)' }}>
+          No projects archived yet
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -415,6 +493,8 @@ const LibrarySection = () => {
               projects={shelf}
               startIndex={shelves.slice(0, shelfIndex).reduce((sum, s) => sum + s.length, 0)}
               onSelect={setSelected}
+              heights={ALL_HEIGHTS}
+              widths={ALL_WIDTHS}
             />
           ))}
         </div>
