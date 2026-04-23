@@ -34,12 +34,15 @@ const ParallaxWorld = ({ children }: Props) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isJumping, setIsJumping] = useState(false);
   const [overlay,   setOverlay]   = useState<'hidden' | 'in' | 'out'>('hidden');
+  const [charOpacity, setCharOpacity] = useState(1);
 
   // ── Stable function refs — updated every render, called by RAF ──
   const syncWorldRef       = useRef<(p: number) => void>(() => {});
   const doRoomTransRef     = useRef<(dir: number) => void>(() => {});
   const walkLoopRef        = useRef<() => void>(() => {});
   const performJumpRef     = useRef<() => void>(() => {});
+
+  const isInteractingRef   = useRef(false);
 
   // ── syncWorld ────────────────────────────────────────────────────
   const syncWorld = (p: number) => {
@@ -178,6 +181,22 @@ const ParallaxWorld = ({ children }: Props) => {
       const dir  = right ? 1 : -1;
       const next = charXRef.current + dir * CHAR_SPEED;
 
+      if (lastSectionRef.current === 3 && Math.abs(next - 0.5) < 0.02 && !isInteractingRef.current) {
+        charXRef.current = 0.5;
+        setCharX(0.5);
+        isInteractingRef.current = true;
+        setCharOpacity(0);
+        
+        window.dispatchEvent(new CustomEvent('boothEnter'));
+        
+        if (isRunningRef.current) {
+          isRunningRef.current = false;
+          setIsRunning(false);
+        }
+        rafRef.current = null;
+        return;
+      }
+
       if (right && next >= EDGE_RIGHT) {
         charXRef.current = EDGE_RIGHT;
         setCharX(EDGE_RIGHT);
@@ -248,6 +267,7 @@ const ParallaxWorld = ({ children }: Props) => {
     const walkKeys = ['ArrowRight', 'ArrowLeft', '.', '>', ',', '<'];
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isInteractingRef.current) return;
       if (walkKeys.includes(e.key)) {
         e.preventDefault();
         keysRef.current.add(e.key);
@@ -320,6 +340,16 @@ const ParallaxWorld = ({ children }: Props) => {
     return () => window.removeEventListener('hudJump', handleJump);
   }, []);
 
+  // ── Interaction listeners ─────────────────────────────────────────
+  useEffect(() => {
+    const handleBoothExit = () => {
+      isInteractingRef.current = false;
+      setCharOpacity(1);
+    };
+    window.addEventListener('boothExit', handleBoothExit);
+    return () => window.removeEventListener('boothExit', handleBoothExit);
+  }, []);
+
   return (
     <div className="world-container">
       {/* Dark transition overlay */}
@@ -347,7 +377,8 @@ const ParallaxWorld = ({ children }: Props) => {
           transform: 'translateX(-50%)',
           zIndex: 50,
           pointerEvents: 'none',
-          transition: 'none',
+          transition: 'opacity 0.4s ease-out',
+          opacity: charOpacity,
         }}
       >
         <NarutoCharacter

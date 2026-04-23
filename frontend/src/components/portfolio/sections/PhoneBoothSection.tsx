@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 const PhoneBoothSection = () => {
@@ -12,13 +12,25 @@ const PhoneBoothSection = () => {
     e.preventDefault();
     console.log('Contact form:', form);
     setSent(true);
-    setTimeout(() => { setSent(false); setFormOpen(false); setBoothEntered(false); }, 3000);
+    setTimeout(() => { 
+      setSent(false); 
+      setFormOpen(false); 
+      setBoothEntered(false); 
+      window.dispatchEvent(new CustomEvent('boothExit'));
+    }, 3000);
   };
 
   const enterBooth = () => {
+    if (boothEntered) return;
     setBoothEntered(true);
     setTimeout(() => setFormOpen(true), 600);
   };
+
+  useEffect(() => {
+    const handleEnter = () => enterBooth();
+    window.addEventListener('boothEnter', handleEnter);
+    return () => window.removeEventListener('boothEnter', handleEnter);
+  }, [boothEntered]);
 
   const SOCIALS = [
     { name: 'GitHub',   link: 'https://github.com/Derick-Feb/', icon: '⌥' },
@@ -211,7 +223,13 @@ const PhoneBoothSection = () => {
 
       {/* Holographic form modal */}
       {formOpen && createPortal(
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setFormOpen(false); setBoothEntered(false); } }}>
+        <div className="modal-overlay" onClick={e => { 
+          if (e.target === e.currentTarget) { 
+            setFormOpen(false); 
+            setBoothEntered(false); 
+            window.dispatchEvent(new CustomEvent('boothExit'));
+          } 
+        }}>
           <div className="hologram-form" style={{ width: '100%', maxWidth: 520, padding: '0' }}>
             {/* Header */}
             <div style={{
