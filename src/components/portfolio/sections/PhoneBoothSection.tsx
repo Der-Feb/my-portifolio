@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useContact } from '@/hooks/useContact';
 
 const PhoneBoothSection = () => {
   const [boothEntered, setBoothEntered] = useState(false);
@@ -8,16 +9,26 @@ const PhoneBoothSection = () => {
   const [sent, setSent] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
+  // Use contact hook
+  const { mutate: sendMessage, isPending, isSuccess, isError, error } = useContact();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Contact form:', form);
-    setSent(true);
-    setTimeout(() => { 
-      setSent(false); 
-      setFormOpen(false); 
-      setBoothEntered(false); 
-      window.dispatchEvent(new CustomEvent('boothExit'));
-    }, 3000);
+    sendMessage(form, {
+      onSuccess: () => {
+        setSent(true);
+        setTimeout(() => { 
+          setSent(false); 
+          setFormOpen(false); 
+          setBoothEntered(false);
+          setForm({ name: '', email: '', message: '' }); // Reset form
+          window.dispatchEvent(new CustomEvent('boothExit'));
+        }, 3000);
+      },
+      onError: (err) => {
+        console.error('Failed to send message:', err);
+      },
+    });
   };
 
   const enterBooth = () => {
@@ -273,6 +284,7 @@ const PhoneBoothSection = () => {
                       style={{ padding: '8px 12px', fontSize: '0.75rem' }}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       required
+                      disabled={isPending}
                     />
                   </div>
                   <div>
@@ -287,6 +299,7 @@ const PhoneBoothSection = () => {
                       style={{ padding: '8px 12px', fontSize: '0.75rem' }}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       required
+                      disabled={isPending}
                     />
                   </div>
                   <div>
@@ -301,10 +314,16 @@ const PhoneBoothSection = () => {
                       style={{ padding: '8px 12px', fontSize: '0.75rem', resize: 'none' }}
                       onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                       required
+                      disabled={isPending}
                     />
                   </div>
-                  <button type="submit" className="hologram-btn" style={{ marginTop: 6, fontSize: '0.75rem', padding: '10px' }}>
-                    TRANSMIT MESSAGE ⚡
+                  {isError && (
+                    <div style={{ color: '#cc2020', fontSize: '0.65rem', textAlign: 'center' }}>
+                      ⚠️ Transmission failed. Please try again.
+                    </div>
+                  )}
+                  <button type="submit" className="hologram-btn" style={{ marginTop: 6, fontSize: '0.75rem', padding: '10px' }} disabled={isPending}>
+                    {isPending ? 'TRANSMITTING...' : 'TRANSMIT MESSAGE ⚡'}
                   </button>
                 </>
               )}
