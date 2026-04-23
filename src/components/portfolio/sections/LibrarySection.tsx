@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useProjects } from '@/hooks/useProjects';
-import type { Project } from '@/types/api';
 import { PROJECTS as MOCK_PROJECTS } from '@/__mock__/projects';
 
 // Generate varied heights and widths for all books
@@ -12,7 +10,7 @@ const generateWidths = (count: number) =>
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
-const ProjectModal = ({ project, onClose }: { project: Project | any; onClose: () => void }) => (
+const ProjectModal = ({ project, onClose }: { project: any; onClose: () => void }) => (
   createPortal(
     <div
       className="modal-overlay"
@@ -187,7 +185,7 @@ const ProjectModal = ({ project, onClose }: { project: Project | any; onClose: (
 const Book = ({
   project, height, width, onClick,
 }: {
-  project: Project | any; height: number; width: number; onClick: () => void;
+  project: any; height: number; width: number; onClick: () => void;
 }) => (
   <div
     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative' }}
@@ -251,9 +249,9 @@ const Book = ({
 const Shelf = ({
   projects, startIndex, onSelect, heights, widths,
 }: {
-  projects: (Project | any)[]; 
+  projects: any[]; 
   startIndex: number; 
-  onSelect: (p: Project | any) => void;
+  onSelect: (p: any) => void;
   heights: number[];
   widths: number[];
 }) => (
@@ -278,25 +276,12 @@ const Shelf = ({
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 const LibrarySection = () => {
-  const [selected, setSelected] = useState<Project | any | null>(null);
+  const [selected, setSelected] = useState<any | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const shelvesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch projects from API
-  const { data: apiProjects, isLoading, error } = useProjects();
-
-  // Use API data if available, otherwise fallback to mock data
-  const projects = useMemo(() => {
-    if (apiProjects && apiProjects.length > 0) {
-      return apiProjects;
-    }
-    // Fallback to mock data if API fails or returns empty
-    if (error || !apiProjects) {
-      console.warn('Using mock data - API unavailable or returned no data');
-      return MOCK_PROJECTS;
-    }
-    return [];
-  }, [apiProjects, error]);
+  // Use mock data
+  const projects = MOCK_PROJECTS;
 
   // Split into shelves alternating between 6 and 7 books
   const { shelves, ALL_HEIGHTS, ALL_WIDTHS } = useMemo(() => {
@@ -304,7 +289,7 @@ const LibrarySection = () => {
       return { shelves: [], ALL_HEIGHTS: [], ALL_WIDTHS: [] };
     }
 
-    const shelves: (Project | any)[][] = [];
+    const shelves: any[][] = [];
     let bookIndex = 0;
     let shelfSize = 6; // Start with 6
     while (bookIndex < projects.length) {
@@ -343,54 +328,6 @@ const LibrarySection = () => {
 
     return () => clearInterval(interval);
   }, [isHovering, selected]);
-
-  // Show loading state only briefly
-  if (isLoading && !projects.length) {
-    return (
-      <section
-        id="library"
-        className="section-room"
-        style={{
-          background: 'linear-gradient(180deg, #0a0b14 0%, #0d0f1e 60%, #08090d 100%)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-          padding: '72px 5vw 32px',
-        }}
-      >
-        <div style={{ color: 'var(--naruto-orange)', fontSize: '1.2rem', fontFamily: 'var(--font-display)' }}>
-          LOADING ARCHIVES...
-        </div>
-      </section>
-    );
-  }
-
-  // If we have no projects at all (shouldn't happen with fallback)
-  if (!projects || projects.length === 0) {
-    return (
-      <section
-        id="library"
-        className="section-room"
-        style={{
-          background: 'linear-gradient(180deg, #0a0b14 0%, #0d0f1e 60%, #08090d 100%)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflow: 'hidden',
-          padding: '72px 5vw 32px',
-        }}
-      >
-        <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontFamily: 'var(--font-body)' }}>
-          No projects archived yet
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section
