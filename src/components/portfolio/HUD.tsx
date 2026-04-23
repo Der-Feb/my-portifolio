@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAvailability } from '@/hooks/useAvailability';
 
 const TOC_ITEMS = [
   { id: 'hero',      label: 'Home',        num: 'I'   },
@@ -21,8 +20,9 @@ export const triggerPageFlip = (mode: 'rapid' | 'section' = 'rapid') => {
 const HUD = () => {
   const [active, setActive] = useState('hero');
   
-  // Fetch availability status with polling (refetch every 30 seconds)
-  const { data: availability, isLoading: availabilityLoading } = useAvailability();
+  // Mock availability status
+  const availability = { availableForWork: true };
+  const availabilityLoading = false;
 
   useEffect(() => {
     const handleSectionChange = (e: any) => {
@@ -80,6 +80,45 @@ const HUD = () => {
           <span className="toc-title__sub">The Portfolio — Vol. I</span>
         </div>
 
+        {/* Availability Status - CENTER */}
+        {!availabilityLoading && availability && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.65rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            fontFamily: 'var(--font-body)',
+            fontWeight: 600,
+            padding: '8px 16px',
+            border: availability.availableForWork 
+              ? '1.5px solid var(--naruto-orange)' 
+              : '1.5px solid #6b7280',
+            borderRadius: '4px',
+            background: availability.availableForWork
+              ? 'rgba(232, 125, 43, 0.05)'
+              : 'rgba(107, 114, 128, 0.05)',
+          }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: availability.availableForWork ? 'var(--naruto-orange)' : '#6b7280',
+              boxShadow: availability.availableForWork 
+                ? '0 0 10px var(--naruto-orange)' 
+                : '0 0 8px rgba(107, 114, 128, 0.6)',
+              animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
+            }} />
+            <span style={{ 
+              color: availability.availableForWork ? 'var(--naruto-orange)' : '#9ca3af',
+            }}>
+              {availability.availableForWork ? 'Available for Work' : 'Not Available'}
+            </span>
+          </div>
+        )}
+
+        {/* Section Links - RIGHT */}
         <ul className="toc-links">
           {TOC_ITEMS.map(({ id, label, num }) => (
             <li key={id} 
@@ -92,38 +131,6 @@ const HUD = () => {
             </li>
           ))}
         </ul>
-
-        {/* Availability Status */}
-        {!availabilityLoading && availability && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.65rem',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            fontFamily: 'var(--font-body)',
-            padding: '4px 12px',
-            borderLeft: '1px solid rgba(232,125,43,0.2)',
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: availability.availableForWork ? '#4ade80' : '#ef4444',
-              boxShadow: availability.availableForWork 
-                ? '0 0 8px rgba(74, 222, 128, 0.6)' 
-                : '0 0 8px rgba(239, 68, 68, 0.6)',
-              animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
-            }} />
-            <span style={{ 
-              color: availability.availableForWork ? '#4ade80' : '#ef4444',
-              fontWeight: 500,
-            }}>
-              {availability.availableForWork ? 'Available' : 'Unavailable'}
-            </span>
-          </div>
-        )}
       </nav>
     </>
   );
