@@ -82,34 +82,39 @@ const HUD = () => {
 
         {/* Availability Status - CENTER */}
         {!availabilityLoading && availability && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.65rem',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            fontFamily: 'var(--font-body)',
-            fontWeight: 600,
-            padding: '8px 16px',
-            border: availability.availableForWork 
-              ? '1.5px solid var(--naruto-orange)' 
-              : '1.5px solid #6b7280',
-            borderRadius: '4px',
-            background: availability.availableForWork
-              ? 'rgba(232, 125, 43, 0.05)'
-              : 'rgba(107, 114, 128, 0.05)',
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: availability.availableForWork ? 'var(--naruto-orange)' : '#6b7280',
-              boxShadow: availability.availableForWork 
-                ? '0 0 10px var(--naruto-orange)' 
-                : '0 0 8px rgba(107, 114, 128, 0.6)',
-              animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
-            }} />
+          <div 
+            className="availability-status"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.65rem',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 600,
+              padding: '8px 16px',
+              border: availability.availableForWork 
+                ? '1.5px solid var(--naruto-orange)' 
+                : '1.5px solid #6b7280',
+              borderRadius: '4px',
+              background: availability.availableForWork
+                ? 'rgba(232, 125, 43, 0.05)'
+                : 'rgba(107, 114, 128, 0.05)',
+              transition: 'all 0.3s ease',
+            }}>
+            <div 
+              className="status-indicator"
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: availability.availableForWork ? 'var(--naruto-orange)' : '#6b7280',
+                boxShadow: availability.availableForWork 
+                  ? '0 0 10px var(--naruto-orange)' 
+                  : '0 0 8px rgba(107, 114, 128, 0.6)',
+                animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
+              }} />
             <span style={{ 
               color: availability.availableForWork ? 'var(--naruto-orange)' : '#9ca3af',
             }}>
