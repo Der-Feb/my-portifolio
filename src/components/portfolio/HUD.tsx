@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAvailability } from '@/hooks/useAvailability';
 
 const TOC_ITEMS = [
   { id: 'hero',      label: 'Home',        num: 'I'   },
@@ -19,6 +20,9 @@ export const triggerPageFlip = (mode: 'rapid' | 'section' = 'rapid') => {
 
 const HUD = () => {
   const [active, setActive] = useState('hero');
+  
+  // Fetch availability status with polling (refetch every 30 seconds)
+  const { data: availability, isLoading: availabilityLoading } = useAvailability();
 
   useEffect(() => {
     const handleSectionChange = (e: any) => {
@@ -88,6 +92,38 @@ const HUD = () => {
             </li>
           ))}
         </ul>
+
+        {/* Availability Status */}
+        {!availabilityLoading && availability && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.65rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            fontFamily: 'var(--font-body)',
+            padding: '4px 12px',
+            borderLeft: '1px solid rgba(232,125,43,0.2)',
+          }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: availability.availableForWork ? '#4ade80' : '#ef4444',
+              boxShadow: availability.availableForWork 
+                ? '0 0 8px rgba(74, 222, 128, 0.6)' 
+                : '0 0 8px rgba(239, 68, 68, 0.6)',
+              animation: availability.availableForWork ? 'pulse 2s ease-in-out infinite' : 'none',
+            }} />
+            <span style={{ 
+              color: availability.availableForWork ? '#4ade80' : '#ef4444',
+              fontWeight: 500,
+            }}>
+              {availability.availableForWork ? 'Available' : 'Unavailable'}
+            </span>
+          </div>
+        )}
       </nav>
     </>
   );
