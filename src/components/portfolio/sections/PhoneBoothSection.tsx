@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useContact } from '@/hooks/useContact';
 
 const PhoneBoothSection = () => {
   const [boothEntered, setBoothEntered] = useState(false);
@@ -9,26 +8,23 @@ const PhoneBoothSection = () => {
   const [sent, setSent] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Use contact hook
-  const { mutate: sendMessage, isPending, isSuccess, isError, error } = useContact();
+  // Mock contact submission
+  const isPending = false;
+  const isSuccess = false;
+  const isError = false;
+  const error = null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(form, {
-      onSuccess: () => {
-        setSent(true);
-        setTimeout(() => { 
-          setSent(false); 
-          setFormOpen(false); 
-          setBoothEntered(false);
-          setForm({ name: '', email: '', message: '' }); // Reset form
-          window.dispatchEvent(new CustomEvent('boothExit'));
-        }, 3000);
-      },
-      onError: (err) => {
-        console.error('Failed to send message:', err);
-      },
-    });
+    // Mock success
+    setSent(true);
+    setTimeout(() => { 
+      setSent(false); 
+      setFormOpen(false); 
+      setBoothEntered(false);
+      setForm({ name: '', email: '', message: '' }); // Reset form
+      window.dispatchEvent(new CustomEvent('boothExit'));
+    }, 3000);
   };
 
   const enterBooth = () => {
