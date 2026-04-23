@@ -280,7 +280,7 @@ const LibrarySection = () => {
   const [isHovering, setIsHovering] = useState(false);
   const shelvesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Use mock data
+  // Use mock data - API integration removed for simplicity
   const projects = MOCK_PROJECTS;
 
   // Split into shelves alternating between 6 and 7 books
